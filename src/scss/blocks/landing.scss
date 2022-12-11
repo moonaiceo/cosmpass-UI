@@ -1,0 +1,44 @@
+.landing {
+    position: relative;
+    &__logo {
+        padding-top: 32px;
+    }
+    &__body {
+        margin-top: 98px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        &__text {
+            &-header {
+                font-weight: 700;
+                font-size: 48px;
+                line-height: 57px;
+                color: #FFFFFF;
+            }
+            &-subheader {
+                margin-top: 24px;
+                font-weight: 500;
+                font-size: 16px;
+                line-height: 24px;
+                color: #FFFFFF;
+            }
+        }
+        &__icon {
+            &-img {
+                width: 398px;
+                height: 398px;
+            }
+        }
+        
+    }
+    &__bg {
+        position: absolute;
+        top: 91px;
+        right: 0;
+        z-index: -1;
+        &-img {
+            width: 1160px;
+            height: 642px;
+        }
+    }
+}

@@ -1,0 +1,39 @@
+.landing {
+  position: relative;
+}
+.landing__logo {
+  padding-top: 32px;
+}
+.landing__body {
+  margin-top: 98px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.landing__body__text-header {
+  font-weight: 700;
+  font-size: 48px;
+  line-height: 57px;
+  color: #FFFFFF;
+}
+.landing__body__text-subheader {
+  margin-top: 24px;
+  font-weight: 500;
+  font-size: 16px;
+  line-height: 24px;
+  color: #FFFFFF;
+}
+.landing__body__icon-img {
+  width: 398px;
+  height: 398px;
+}
+.landing__bg {
+  position: absolute;
+  top: 91px;
+  right: 0;
+  z-index: -1;
+}
+.landing__bg-img {
+  width: 1160px;
+  height: 642px;
+}

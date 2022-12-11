@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CosmPass</title>
+    <link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+    <section class="header">
+        <div class="header__wrapper">
+            <a href="#" class="header__logo">
+                <img src="img/application/icon.svg" alt="logo" class="header__logo__icon">
+            </a>
+
+            <!-- <div class="header__nav">
+                    <ul class="header__nav-list">
+                        <li class="header__nav-item header__nav-item_1 header__nav-item_active">Vaults</li>
+                        <li class="menu__nav-item header__nav-item_2">Airdrop</li>
+                        <li class="header__nav-item header__nav-item_3">Spectrum Classic</li>
+                    </ul>
+                </div> -->
+
+            <button class="button button__wallet">Connect</button>
+        </div>
+    </section>
+
+    <section class="promo">
+        <div class="container">
+            <div class="promo__wrapper">
+                <img src="icons/application/icon_clear.svg" alt="" class="promo__icon">
+                <h1 class="promo__header">Cosmpass - Cosmos AutoCompounder </h1>
+                <h2 class="promo__subheader">Cosmpass will multiply your rewards.Provide liquidity here.</h2>
+
+                <div class="promo__value">
+                    <div class="promo__value__text">
+                        <div class="promo__value__header promo__value__header_1">Total value Locked</div>
+                        <div class="promo__value__number">1 000 786 798 USD</div>
+                    </div>
+
+                    <div class="promo__value__text">
+                        <div class="promo__value__header promo__value__header_2">Mine value Locked</div>
+                        <div class="promo__value__number">—</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <img src="img/application/promo_fig.svg" alt="" class="promo__img">
+    </section>
+
+    <section class="vaults">
+        <div class="container">
+            <!-- <h2 class="vaults__title">Vaults</h2>
+            <div class="vaults__subtitle">Политика не может не реагировать на ласковый <br>
+                перезвон вертикали власти</div> -->
+            
+
+
+
+            <div class="vaults__settings">
+                <div class="vaults__settings-views">
+                    <div class="vaults__settings-views__view vaults__settings-views__view_active">All Vaults</div>
+                    <div class="vaults__settings-views__view">My Vaults</div>
+                </div>
+                
+                <div class="vaults__settings__wrapper">
+                    <div class="vaults__settings__sorting">
+                        <div class="vaults__settings__sorting-sort">
+                            <div class="vaults__settings__sorting-label">Sort by</div>
+                            <div class="custom-select" id="sort">
+                                <select name="sort">
+                                    <option data-sort-type="default">Default</option>
+                                    <option data-sort-type="data-apy">APY</option>
+                                    <option data-sort-type="data-tvl">TVL</option>
+                                    <option data-sort-type="data-daily">Daily</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="vaults__settings__sorting-farms">
+                            <div class="vaults__settings__sorting-label">Farm</div>
+                            <div class="custom-select" id="farms">
+                                <select name="farms">
+                                    <option>Active farms</option>
+                                    <option>SingularityDAO</option>
+                                    <option>Astroport</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="vaults__settings-search">
+                        <div class="vaults__settings__sorting-label">Search</div>
+                        <input type="search" id="fsearch" name="fsearch" placeholder="Type something..." autocomplete="off">
+                    </div>
+                </div>
+            </div>
+
+            <div class="vaults__cards">
+
+                <div class="vaults__cards__items">
+                    <div class="vaults__cards-item">
+                        <div class="vaults__cards-item__header">
+                            <div class="vaults__cards-item__header__icons">
+                                <div class="vaults__cards-item__header__circle_one">
+                                    <!-- <img src="" alt="coin icon" class="vaults__cards-item__header__icon"> -->
+                                </div>
+
+                                <div class="vaults__cards-item__header__circle_two">
+                                    <!-- <img src="" alt="coin icon" class="vaults__cards-item__header__icon"> -->
+                                </div>
+                            </div>
+
+                            <div class="vaults__cards-item__header__text">
+                                <div class="vaults__cards-item__header-title" data-name>ampLUNA - LUNA LP</div>
+                                <div class="vaults__cards-item__header-subtitle">Farm: Astroport</div>
+                            </div>
+
+                        </div>
+
+                        
+                        <!-- <div class="vaults__cards-balance">
+                            <div class="vaults__cards-balance__label">My balance</div>
+                            <div class="vaults__cards-balance__value">-</div>
+                        </div> -->
+
+                        <div class="vaults__cards-item__body">
+                            <div class="vaults__cards-item__body-items">
+                                <div class="vaults__cards-item__body-item balance">
+                                    <div class="vaults__cards-item__body-item__title">My Balance</div>
+                                    <div class="vaults__cards-item__body-item__descr">187.67k USD <span class="span-balance">158 USD</span></div>
+                                </div>
+
+                                <div class="vaults__cards-item__body-item">
+                                    <div class="vaults__cards-item__body-item__title">TVL</div>
+                                    <div class="vaults__cards-item__body-item__descr" data-tvl>187.67k USD</div>
+                                </div>
+
+                                <div class="vaults__cards-item__body-item">
+                                    <div class="vaults__cards-item__body-item__title">APY</div>
+                                    <div class="vaults__cards-item__body-item__descr label-apy" data-apy><span class="span-apy">87.24%</span> 151.09%</div>
+                                </div>
+
+                                <div class="vaults__cards-item__body-item">
+                                    <div class="vaults__cards-item__body-item__title">Daily</div>
+                                    <div class="vaults__cards-item__body-item__descr" data-daily>0.2271%</div>
+                                </div>
+
+                                <div class="vaults__cards-item__body-item">
+                                    <div class="vaults__cards-item__body-item__title">Safety</div>
+                                    <div class="vaults__cards-item__body-item__descr"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="vaults__cards-item">
+                        <div class="vaults__cards-item__header">
+                            <div class="vaults__cards-item__header__icons">
+                                <div class="vaults__cards-item__header__circle_one">
+                                    <!-- <img src="" alt="coin icon" class="vaults__cards-item__header__icon"> -->
+                                </div>
+
+                                <div class="vaults__cards-item__header__circle_two">
+                                    <!-- <img src="" alt="coin icon" class="vaults__cards-item__header__icon"> -->
+                                </div>
+                            </div>
+
+                            <div class="vaults__cards-item__header__text">
+                                <div class="vaults__cards-item__header-title" data-name>LUNA - LUNA</div>
+                                <div class="vaults__cards-item__header-subtitle">Farm: SingularityDAO</div>
+                            </div>
+
+                        </div>
+
+                        <div class="vaults__cards-item__body">
+                            <div class="vaults__cards-item__body-items">
+                                <div class="vaults__cards-item__body-item balance">
+                                    <div class="vaults__cards-item__body-item__title">My Balance</div>
+                                    <div class="vaults__cards-item__body-item__descr">—</div>
+                                </div>
+
+                                <div class="vaults__cards-item__body-item">
+                                    <div class="vaults__cards-item__body-item__title">TVL</div>
+                                    <div class="vaults__cards-item__body-item__descr" data-tvl>280.47k USD</div>
+                                </div>
+
+                                <div class="vaults__cards-item__body-item">
+                                    <div class="vaults__cards-item__body-item__title">APY</div>
+                                    <div class="vaults__cards-item__body-item__descr label-apy" data-apy><span class="span-apy">65.18%</span> 120.76%</div>
+                                </div>
+
+                                <div class="vaults__cards-item__body-item">
+                                    <div class="vaults__cards-item__body-item__title">Daily</div>
+                                    <div class="vaults__cards-item__body-item__descr" data-daily>0.3329%</div>
+                                </div>
+
+                                <div class="vaults__cards-item__body-item">
+                                    <div class="vaults__cards-item__body-item__title">Safety</div>
+                                    <div class="vaults__cards-item__body-item__descr"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="vaults__cards-item">
+                        <div class="vaults__cards-item__header">
+                            <div class="vaults__cards-item__header__icons">
+                                <div class="vaults__cards-item__header__circle_one">
+                                    <!-- <img src="" alt="coin icon" class="vaults__cards-item__header__icon"> -->
+                                </div>
+
+                                <div class="vaults__cards-item__header__circle_two">
+                                    <!-- <img src="" alt="coin icon" class="vaults__cards-item__header__icon"> -->
+                                </div>
+                            </div>
+
+                            <div class="vaults__cards-item__header__text">
+                                <div class="vaults__cards-item__header-title" data-name>LUNA - LUNA</div>
+                                <div class="vaults__cards-item__header-subtitle">Farm: SingularityDAO</div>
+                            </div>
+
+                        </div>
+
+                        <div class="vaults__cards-item__body">
+                            <div class="vaults__cards-item__body-items">
+                                <div class="vaults__cards-item__body-item balance">
+                                    <div class="vaults__cards-item__body-item__title">My Balance</div>
+                                    <div class="vaults__cards-item__body-item__descr">—</div>
+                                </div>
+
+                                <div class="vaults__cards-item__body-item">
+                                    <div class="vaults__cards-item__body-item__title">TVL</div>
+                                    <div class="vaults__cards-item__body-item__descr" data-tvl>280.47k USD</div>
+                                </div>
+
+                                <div class="vaults__cards-item__body-item">
+                                    <div class="vaults__cards-item__body-item__title">APY</div>
+                                    <div class="vaults__cards-item__body-item__descr label-apy" data-apy><span class="span-apy">65.18%</span> 120.76%</div>
+                                </div>
+
+                                <div class="vaults__cards-item__body-item">
+                                    <div class="vaults__cards-item__body-item__title">Daily</div>
+                                    <div class="vaults__cards-item__body-item__descr" data-daily>0.3329%</div>
+                                </div>
+
+                                <div class="vaults__cards-item__body-item">
+                                    <div class="vaults__cards-item__body-item__title">Safety</div>
+                                    <div class="vaults__cards-item__body-item__descr"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="vaults__cards-item">
+                        <div class="vaults__cards-item__header">
+                            <div class="vaults__cards-item__header__icons">
+                                <div class="vaults__cards-item__header__circle_one">
+                                    <!-- <img src="" alt="coin icon" class="vaults__cards-item__header__icon"> -->
+                                </div>
+
+                                <div class="vaults__cards-item__header__circle_two">
+                                    <!-- <img src="" alt="coin icon" class="vaults__cards-item__header__icon"> -->
+                                </div>
+                            </div>
+
+                            <div class="vaults__cards-item__header__text">
+                                <div class="vaults__cards-item__header-title" data-name>LUNA - LUNA</div>
+                                <div class="vaults__cards-item__header-subtitle">Farm: SingularityDAO</div>
+                            </div>
+
+                        </div>
+
+                        <div class="vaults__cards-item__body">
+                            <div class="vaults__cards-item__body-items">
+                                <div class="vaults__cards-item__body-item balance">
+                                    <div class="vaults__cards-item__body-item__title">My Balance</div>
+                                    <div class="vaults__cards-item__body-item__descr">—</div>
+                                </div>
+
+                                <div class="vaults__cards-item__body-item">
+                                    <div class="vaults__cards-item__body-item__title">TVL</div>
+                                    <div class="vaults__cards-item__body-item__descr" data-tvl>280.47k USD</div>
+                                </div>
+
+                                <div class="vaults__cards-item__body-item">
+                                    <div class="vaults__cards-item__body-item__title">APY</div>
+                                    <div class="vaults__cards-item__body-item__descr label-apy" data-apy><span class="span-apy">65.18%</span> 120.76%</div>
+                                </div>
+
+                                <div class="vaults__cards-item__body-item">
+                                    <div class="vaults__cards-item__body-item__title">Daily</div>
+                                    <div class="vaults__cards-item__body-item__descr" data-daily>0.3329%</div>
+                                </div>
+
+                                <div class="vaults__cards-item__body-item">
+                                    <div class="vaults__cards-item__body-item__title">Safety</div>
+                                    <div class="vaults__cards-item__body-item__descr"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="vaults__cards-item">
+                        <div class="vaults__cards-item__header">
+                            <div class="vaults__cards-item__header__icons">
+                                <div class="vaults__cards-item__header__circle_one">
+                                    <!-- <img src="" alt="coin icon" class="vaults__cards-item__header__icon"> -->
+                                </div>
+
+                                <div class="vaults__cards-item__header__circle_two">
+                                    <!-- <img src="" alt="coin icon" class="vaults__cards-item__header__icon"> -->
+                                </div>
+                            </div>
+
+                            <div class="vaults__cards-item__header__text">
+                                <div class="vaults__cards-item__header-title" data-name>ampLUNA - LUNA LP</div>
+                                <div class="vaults__cards-item__header-subtitle">Farm: Astroport</div>
+                            </div>
+
+                        </div>
+
+                        
+                        <!-- <div class="vaults__cards-balance">
+                            <div class="vaults__cards-balance__label">My balance</div>
+                            <div class="vaults__cards-balance__value">-</div>
+                        </div> -->
+
+                        <div class="vaults__cards-item__body">
+                            <div class="vaults__cards-item__body-items">
+                                <div class="vaults__cards-item__body-item balance">
+                                    <div class="vaults__cards-item__body-item__title">My Balance</div>
+                                    <div class="vaults__cards-item__body-item__descr">187.67k USD <span class="span-balance">158 USD</span></div>
+                                </div>
+
+                                <div class="vaults__cards-item__body-item">
+                                    <div class="vaults__cards-item__body-item__title">TVL</div>
+                                    <div class="vaults__cards-item__body-item__descr" data-tvl>187.67k USD</div>
+                                </div>
+
+                                <div class="vaults__cards-item__body-item">
+                                    <div class="vaults__cards-item__body-item__title">APY</div>
+                                    <div class="vaults__cards-item__body-item__descr label-apy" data-apy><span class="span-apy">87.24%</span> 151.09%</div>
+                                </div>
+
+                                <div class="vaults__cards-item__body-item">
+                                    <div class="vaults__cards-item__body-item__title">Daily</div>
+                                    <div class="vaults__cards-item__body-item__descr" data-daily>0.2271%</div>
+                                </div>
+
+                                <div class="vaults__cards-item__body-item">
+                                    <div class="vaults__cards-item__body-item__title">Safety</div>
+                                    <div class="vaults__cards-item__body-item__descr"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="vaults__cards-item">
+                        <div class="vaults__cards-item__header">
+                            <div class="vaults__cards-item__header__icons">
+                                <div class="vaults__cards-item__header__circle_one">
+                                    <!-- <img src="" alt="coin icon" class="vaults__cards-item__header__icon"> -->
+                                </div>
+
+                                <div class="vaults__cards-item__header__circle_two">
+                                    <!-- <img src="" alt="coin icon" class="vaults__cards-item__header__icon"> -->
+                                </div>
+                            </div>
+
+                            <div class="vaults__cards-item__header__text">
+                                <div class="vaults__cards-item__header-title" data-name>ampLUNA - LUNA LP</div>
+                                <div class="vaults__cards-item__header-subtitle">Farm: SingularityDAO</div>
+                            </div>
+
+                        </div>
+
+                        
+                        <!-- <div class="vaults__cards-balance">
+                            <div class="vaults__cards-balance__label">My balance</div>
+                            <div class="vaults__cards-balance__value">-</div>
+                        </div> -->
+
+                        <div class="vaults__cards-item__body">
+                            <div class="vaults__cards-item__body-items">
+                                <div class="vaults__cards-item__body-item balance">
+                                    <div class="vaults__cards-item__body-item__title">My Balance</div>
+                                    <div class="vaults__cards-item__body-item__descr">187.67k USD <span class="span-balance">158 USD</span></div>
+                                </div>
+
+                                <div class="vaults__cards-item__body-item">
+                                    <div class="vaults__cards-item__body-item__title">TVL</div>
+                                    <div class="vaults__cards-item__body-item__descr" data-tvl>200.98k USD</div>
+                                </div>
+
+                                <div class="vaults__cards-item__body-item">
+                                    <div class="vaults__cards-item__body-item__title">APY</div>
+                                    <div class="vaults__cards-item__body-item__descr label-apy" data-apy><span class="span-apy">87.24%</span> 151.09%</div>
+                                </div>
+
+                                <div class="vaults__cards-item__body-item">
+                                    <div class="vaults__cards-item__body-item__title">Daily</div>
+                                    <div class="vaults__cards-item__body-item__descr" data-daily>0.2271%</div>
+                                </div>
+
+                                <div class="vaults__cards-item__body-item">
+                                    <div class="vaults__cards-item__body-item__title">Safety</div>
+                                    <div class="vaults__cards-item__body-item__descr"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="overlay">
+        <div class="modal">
+
+            <div class="modal__header">
+                <div class="modal__header__icons">
+                    <div class="modal__header__circle_one">
+                        <!-- <img src="" alt="coin icon" class="vaults__cards-item__header__icon"> -->
+                    </div>
+    
+                    <div class="modal__header__circle_two">
+                        <!-- <img src="" alt="coin icon" class="vaults__cards-item__header__icon"> -->
+                    </div>
+                </div>
+                <div class="modal__header__title"></div>
+                <div class="modal__header__subtitle"></div>    
+            </div>
+            
+            <div class="modal__descr">
+                <div class="modal__descr-item balance">
+                    <div class="modal__descr-item__header">My Balance</div>
+                    <div class="modal__descr-item__descr"">187.67k USD <span class="span-balance">158 USD</span></div>
+                </div>
+
+                <div class="modal__descr-item">
+                    <div class="modal__descr-item__header">TVL</div>
+                    <div class="modal__descr-item__descr">187.67k USD</div>
+                </div>
+
+                <div class="modal__descr-item">
+                    <div class="modal__descr-item__header">APY</div>
+                    <div class="modal__descr-item__descr label-apy"><span class="span-apy">87.24%</span> 151.09%</div>
+                </div>
+
+                <div class="modal__descr-item">
+                    <div class="modal__descr-item__header">Daily</div>
+                    <div class="modal__descr-item__descr"></div>
+                </div>
+
+                <div class="modal__descr-item">
+                    <div class="modal__descr-item__header">Safety</div>
+                    <div class="modal__descr-item__descr"></div>
+                </div>
+
+                <div class="modal__action">
+                    <div class="modal__actions">
+                        <div class="modal__actions-item modal__actions-item_active">Deposit</div>
+                        <div class="modal__actions-item">Withdraw</div>
+                    </div>
+
+                    <!-- <div class="modal__action__token modal__action__token_active">ASTRO + axlUSDC</div> -->
+
+                    <!-- <div class="modal__deposit__token modal__deposit__token_active">
+                        <input style="color:black" type="number" name="deposit_token_1">
+                        <button class="button button_max">Max</button>
+
+                        <input style="color:black" type="number" name="deposit_token_2">
+                        <button class="button button_max">Max</button>
+                    </div>
+                    
+                    <div class="modal__deposit__lp">
+                        <input style="color:black" type="number" name="deposit_lp">
+                        <button class="button button_max">Max</button>
+                    </div> -->
+
+                    <!-- <div class="modal__withdraw__token">
+                        <input style="color:black" type="number" name="withdraw_token">
+                        <button class="button button_max">Max</button>
+                    </div> -->
+
+                    <div class="modal__action__deposit action__content action__content_active">
+
+                        <form id="deposit-form" class="deposit-form" action="#">
+                            <label class="label">ampLUNA + LUNA
+                                <input type="radio" name="deposit-coin" checked>
+                                <span class="checkmark"></span>
+                            </label>
+    
+                            <label class="label">ampLUNA - LUNA Astroport LP
+                                <input type="radio" name="deposit-coin">
+                                <span class="checkmark"></span>
+                            </label>
+    
+                            <div class="modal__action__deposit-unbond">
+                                <div class="modal__action__deposit-unbond__header">Unbond</div>
+    
+                                <div class="modal__action__deposit-unbond__period">
+                                    <label class="label">14 days
+                                        <input type="radio" name="unbond-period">
+                                        <span class="checkmark"></span>
+                                    </label>
+    
+                                    <label class="label">7 days
+                                        <input type="radio" name="unbond-period" checked>
+                                        <span class="checkmark"></span>
+                                    </label>
+    
+                                    <label class="label">a day
+                                        <input type="radio" name="unbond-period">
+                                        <span class="checkmark"></span>
+                                    </label>
+                                </div>
+                            </div>
+    
+                            <div class="modal__action__deposit__coins">
+                                <div class="modal__action__deposit__coins-item">
+                                    <div class="modal__action__deposit__coins-item__label">ampLUNA</div>
+                                    <div class="modal__action__deposit__coins-item__input modal__action__deposit__coins-item__input_one">
+                                        <input type="number" name="coin one">
+                                    </div>
+                                </div>
+        
+                                <div class="modal__action__deposit__coins-item">
+                                    <div class="modal__action__deposit__coins-item__label">LUNA</div>
+                                    <div class="modal__action__deposit__coins-item__input modal__action__deposit__coins-item__input_two">
+                                        <input type="number" name="coin two">
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                        
+                    </div>
+
+                    <div class="modal__action__withdraw action__content">
+                        <div class="modal__action__withdraw-label">
+                            <div class="modal__action__withdraw-label__header"></div>
+                            <div class="modal__action__withdraw-label__unbond modal__action__withdraw-label__unbond-lock">Unbond</div>
+                        </div>
+
+                        <div class="modal__action__withdraw-input">
+                            <div class="modal__action__withdraw-input__icons">
+                                <div class="modal__action__withdraw-input__circle_one">
+                                    <!-- <img src="" alt="coin icon" class="vaults__cards-item__header__icon"> -->
+                                </div>
+                
+                                <div class="modal__action__withdraw-input__circle_two">
+                                    <!-- <img src="" alt="coin icon" class="vaults__cards-item__header__icon"> -->
+                                </div>
+                            </div>
+                            <form id="withdraw-form" class="withdraw-form" action="#">
+                                <input type="number" disabled name="withdraw_lp">
+                            </form>
+                        </div>
+                    </div>
+
+                    
+                    
+                    </div>
+                </div>
+
+                <div class="modal__fee">
+                    <div class="modal__fee-item">
+                        <div class="modal__fee-item__header">Deposit Fee</div>
+                        <div class="modal__fee-item__descr"">0%</div>
+                    </div>
+
+                    <div class="modal__fee-item">
+                        <div class="modal__fee-item__header">Withdrawal Fee</div>
+                        <div class="modal__fee-item__descr"">0%</div>
+                    </div>
+
+                    <div class="modal__fee-item">
+                        <div class="modal__fee-item__header">Performance Fee</div>
+                        <div class="modal__fee-item__descr"">9.50%</div>
+                    </div>
+                </div>
+                
+                <button class="button button__action button__action_active">Deposit</button>
+            </div>
+            
+            <div class="modal__mini">
+                <div class="modal__mini__icon">
+                    <img src="icons/application/check_circle.svg" alt="status icon" class="modal__mini__icon-img">
+                </div>
+    
+                <div class="modal__mini__descr">Отлично! У вас успешно получилось пополнить</div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
+    <script src="https://code.jquery.com/jquery-migrate-1.2.1.min.js"></script>
+    <script src="js/script.js"></script>
+</body>
+</html>

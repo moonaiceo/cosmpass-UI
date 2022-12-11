@@ -1,0 +1,32 @@
+.header {
+    padding: 16px 156px;
+    background-color: #fff;
+    &__wrapper {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    &__logo {
+        display: flex;
+        justify-content: center;
+        &__icon {
+            margin: 0 auto;
+        }
+    }
+    &__nav {
+        &-list {
+            display: flex;
+            justify-content: space-between;
+            width: 420px;
+        }
+        &-item {
+            font-size: 14px;
+            display: flex;
+            justify-content: center;
+            // &_active {
+            //     background-color: rgba(255, 255, 255, 0.17);
+            //     border-radius: 5%;
+            // }
+        }
+    }
+}
