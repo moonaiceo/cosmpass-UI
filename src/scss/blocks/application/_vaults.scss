@@ -250,8 +250,14 @@
 
 }
 
-.balance {
+.cross_line{
+    width: 100%;
     border-bottom: 1px solid #DCDCDC;
+    line-height: 25px;
+}
+
+.balance {
+    display: none;
     line-height: 25px;
 }
 

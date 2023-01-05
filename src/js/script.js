@@ -4,8 +4,20 @@ const btnWallet = document.querySelector(".button__wallet");
 const btnModalAction = document.querySelector(".button__action");
 const modalActionLP = document.querySelector('.modal__action__lp');
 const vaultsCards = document.querySelector('.vaults__cards__items');
-const chainId = "osmo-test-4";
-const rpcEndPoint = "https://rpc-test.osmosis.zone/";
+const network = "testnet"
+const chainId = {
+  "mainnet": "osmosis-1",
+  "testnet": "osmo-test-4",
+};;
+const rpcEndPoint = {
+  "mainnet": "https://rpc.osmosis.zone/",
+  "testnet": "https://rpc-test.osmosis.zone/",
+};
+const lcdEndPoint = {
+  "mainnet": "https://lcd.osmosis.zone/",
+  "testnet": "https://lcd-test.osmosis.zone/",
+};
+let isUserConnected = false;
 let offlineSigner;
 let account;
 let pools;
@@ -23,16 +35,87 @@ const contractAddress = {
 };
 
 const get_count = async () => {
-    const client_rpc = await CosmWasmClient.connect(rpcEndPoint);
+    const client_rpc = await CosmWasmClient.connect(rpcEndPoint[network]);
     const getCount = await client_rpc.queryContractSmart("osmo16hjln5cvs0magddmzheqfljeq2s5wwuf2pe37a269fv98evep3dq6tj246", {"query_pools": {}})
     return getCount;
 };
 
-get_count().then((value) => {
-  if (localStorage.getItem("isLoggedIn")){
-    connectKeplr();
+function numberWithSpaces(x) {
+  var parts = x.toString().split(".");
+  parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+  return parts.join(".");
+}
+
+async function get_liquidity(pool_id){
+  const response = await $.get(`https://api-osmosis.imperator.co/pools/v2/${pool_id}`);
+  return response[0]['liquidity'];
+}
+
+async function get_total_shares(pool_id){
+  const response = await $.get(`${lcdEndPoint[network]}/osmosis/gamm/v1beta1/pools/${pool_id}`);
+  return response['pool']['total_shares']['amount'];
+}
+
+async function calculate_usd_value(pool_id, user_shares_amount){
+  let liquidity = await get_liquidity(pool_id)
+  let total_shares = await get_total_shares(pool_id)
+  return (liquidity / total_shares) * user_shares_amount
+}
+
+async function get_user_usd_value_for_pool(id){
+  const url = `${lcdEndPoint[network]}/osmosis/lockup/v1beta1/account_locked_longer_duration/${account.address}`
+  let total_usd_value = 0;
+
+  const data = await $.get(url);
+
+  for (const elem of data['locks']) {
+    let coin = elem['coins'][0];
+    const pool_id = coin['denom'].split("/").pop();
+    if (pool_id === id) {
+      let usd_value = await calculate_usd_value(pool_id, coin['amount']);
+      total_usd_value += usd_value;
+    }
   }
-  createVaultsList(value.pools);
+  return total_usd_value;
+}
+
+async function get_users_value_locked(){
+  const url = `${lcdEndPoint[network]}/osmosis/lockup/v1beta1/account_locked_longer_duration/${account.address}`
+  let total_usd_value = 0;
+
+  const data = await $.get(url);
+
+  for (const elem of data['locks']) {
+    let coin = elem['coins'][0];
+    const pool_id = coin['denom'].split("/").pop();
+    let usd_value = await calculate_usd_value(pool_id, coin['amount']);
+    total_usd_value += usd_value;
+  }
+  $('#user_value_locked .promo__value__number').text(numberWithSpaces(total_usd_value.toFixed(2)) + " USD");
+}
+
+function hide_user_related_elements(){
+  $('#user_value_locked').hide();
+  $('.balance').hide();
+}
+
+function show_user_related_elements(){
+  $('#user_value_locked').show();
+  $('.vaults__cards-item__body-item.balance').css("display", "flex");
+  get_users_value_locked()
+}
+
+get_count().then(async (value) => {
+  if (localStorage.getItem("isLoggedIn")){
+    await connectKeplr();
+  }
+  await createVaultsList(value.pools);
+  if (isUserConnected === false){
+    hide_user_related_elements()
+  }
+  else {
+    show_user_related_elements()
+  }
   $('.vaults__cards-item').each(function(i) {
     $(this).on('click', function() {
       createJson(); 
@@ -42,6 +125,8 @@ get_count().then((value) => {
       $('#coinLabelTwo').text($('.vaults__cards-item__header-title').eq(i).text().trim().split('-')[1]);
       $('#depositTokens').text(value.pools[i].token_a_name + " + " + value.pools[i].token_b_name);
       $('#depositLP').text(value.pools[i].pool_id + " LP token");
+      $('input[name="coin one"]').attr("address", value.pools[i].token_a_addr)
+      $('input[name="coin two"]').attr("address", value.pools[i].token_b_addr)
       $('.modal__header__icon').each(function(j) {
         $(this).attr("src", $('.vaults__cards-item__header__icons').eq(i).find('.vaults__cards-item__header__icon').eq(j).attr("src"));
       });
@@ -103,10 +188,11 @@ get_count().then((value) => {
 });
 
 
-const createVaultsList = (vaults) => {
+const createVaultsList = async (vaults) => {
   vaultsCards.innerHTML = "";
-
-  vaults.forEach((vault) => {
+  for (const vault of vaults){
+      console.log(vault.pool_id)
+      let balance = await get_user_usd_value_for_pool(vault.pool_id)
       vaultsCards.innerHTML += `
       <div class="vaults__cards-item">
       <div class="vaults__cards-item__header">
@@ -132,9 +218,10 @@ const createVaultsList = (vaults) => {
           <div class="vaults__cards-item__body-items">
               <div class="vaults__cards-item__body-item balance">
                   <div class="vaults__cards-item__body-item__title">My Balance</div>
-                  <div class="vaults__cards-item__body-item__descr">187.67k USD <span class="span-balance">158 USD</span></div>
+                  <div class="vaults__cards-item__body-item__descr">${numberWithSpaces(balance.toFixed(2))} USD </div>
+                  <!--  <span class="span-balance">158 USD</span> -->
               </div>
-
+              <div class="cross_line"></div>
               <div class="vaults__cards-item__body-item">
                   <div class="vaults__cards-item__body-item__title">TVL</div>
                   <div class="vaults__cards-item__body-item__descr" data-tvl>${vault.tvl} USD</div>
@@ -153,7 +240,7 @@ const createVaultsList = (vaults) => {
       </div>
   </div>
       `;
-  });
+  };
 };
 
 
@@ -164,15 +251,17 @@ btnModalAction.addEventListener("click", function (elem){
 btnWallet.addEventListener("click", () => connectKeplr());
 
 async function deposit_funds(offlineSigner, account, element) {
-  // get exponent of current token by querying https://api-osmosis.imperator.co/tokens/v2/all 
+  // get exponent of current token by querying https://api-osmosis.imperator.co/search/v1/exponent?symbol=OSMO
   // for now set just mock exponent, for osmo exponent = 6. Might be 6, 8, 18 for other tokens
   const exponent = 6;
-  let input1 = element.parentNode.querySelector('input[name="coin one"]').value;
-  let input2 = element.parentNode.querySelector('input[name="coin two"]').value;
+  let input1 = element.parentNode.querySelector('input[name="coin one"]');
+  let input2 = element.parentNode.querySelector('input[name="coin two"]');
+  let denom1 = input1.getAttribute("address");
+  let denom2 = input2.getAttribute("address");
   const withdrawLPInput = document.querySelector('input[name="withdraw_lp"]').value;
 
   const stargateClient = await SigningCosmWasmClient.connectWithSigner(
-    rpcEndPoint,
+    rpcEndPoint[network],
     offlineSigner
   );  
   let msgJson1 = {
@@ -180,8 +269,8 @@ async function deposit_funds(offlineSigner, account, element) {
     "toAddress": "osmo1e4d8k78fvdxqtt8uut8tkw3r6540wrtx6pwn90yp3ughpezzfy9s6t4tts",
     "amount":[
     {
-      "denom":"uosmo",
-      "amount": `${input1 * (10**exponent)}`
+      "denom": denom1,
+      "amount": `${input1.value * (10**exponent)}`
     }
     ]
   };
@@ -190,8 +279,8 @@ async function deposit_funds(offlineSigner, account, element) {
     "toAddress": "osmo1e4d8k78fvdxqtt8uut8tkw3r6540wrtx6pwn90yp3ughpezzfy9s6t4tts",
     "amount":[
     {
-      "denom":"uosmo",
-      "amount": `${input2 * (10**exponent)}`
+      "denom": denom2,
+      "amount": `${input2.value * (10**exponent)}`
     }
     ]
   };
@@ -232,9 +321,9 @@ async function connectKeplr() {
         // Also, it will request that the user unlock the wallet if the wallet is locked.
     }
     else {
-        await window.keplr.enable(chainId);
+        await window.keplr.enable(chainId[network]);
     
-        offlineSigner = window.keplr.getOfflineSigner(chainId);
+        offlineSigner = window.keplr.getOfflineSigner(chainId[network]);
         console.log(offlineSigner);
     
         // You can get the address/public keys by `getAccounts` method.
@@ -243,7 +332,7 @@ async function connectKeplr() {
         // XXX: This line is needed to set the sender address for SigningCosmosClient.
         const accounts = await offlineSigner.getAccounts();
 
-        // const transaction = await sendTx(chainId, accounts[0].pubkey, "sync");
+        // const transaction = await sendTx(chainId[network], accounts[0].pubkey, "sync");
         // console.log(transaction);
 
         account = accounts[0];
@@ -252,6 +341,7 @@ async function connectKeplr() {
         btnWallet.innerHTML = accounts[0].address;
         btnWallet.classList.add('button__wallet_signed');
         localStorage.setItem('isLoggedIn', true);
+        isUserConnected = true;
     
         // Initialize the gaia api with the offline signer that is injected by Keplr extension.
         // const cosmJS = new SigningCosmosClient(
@@ -355,11 +445,11 @@ async function createJson(type_of_msg) {
           '"}' +
           ']' +
         '}';
-        // const arbitraryMsg = window.keplr.signArbitrary(chainId, account.address, JSON.stringify(msg));
+        // const arbitraryMsg = window.keplr.signArbitrary(chainId[network], account.address, JSON.stringify(msg));
         // const base64 = "ewogICAgICAidHlwZSI6ICJvc21vc2lzL2dhbW0vc3dhcC1leGFjdC1hbW91bnQtaW4iLAogICAgICAidmFsdWUiOiB7CiAgICAgICAgInJvdXRlcyI6IFsKICAgICAgICAgIHsKICAgICAgICAgICAgInBvb2xfaWQiOiAiMSIsCiAgICAgICAgICAgICJ0b2tlbl9vdXRfZGVub20iOiAiaWJjLzI3Mzk0RkIwOTJEMkVDQ0Q1NjEyM0M3NEYzNkU0QzFGOTI2MDAxQ0VBREE5Q0E5N0VBNjIyQjI1RjQxRTVFQjIiCiAgICAgICAgICB9CiAgICAgICAgXSwKICAgICAgICAic2VuZGVyIjogIm9zbW8xNmxzdmc3dHB0NGNnM2Q5N3ZocnAybGV3dmV0eDhkazk4dHhjeHkiLAogICAgICAgICJ0b2tlbl9pbiI6IHsKICAgICAgICAgICJhbW91bnQiOiAiMTAwMDAwMCIsCiAgICAgICAgICAiZGVub20iOiAidW9zbW8iCiAgICAgICAgfSwKICAgICAgICAidG9rZW5fb3V0X21pbl9hbW91bnQiOiAiMTA2NzQzIgogICAgICB9CiAgICB9";
         // const base64_v2 = "eyJzZW5kZXIiOiJjb3Ntb3MxMHY0cmFkaGZ5ZHNtNnFnbHJhdzkyYzRseXV2bHVjYXdtcGRnZnUiLCJhY3Rpb24iOiJXaXRoZHJhd0xQIiwidmF1bHRJRCI6NTk5LCJ0b2tlbiI6eyJ0cmFuc2FjdGlvbiI6ImFtcExVTkEgLSBMVU5BIExQIiwiYW1vdW50IjoiMTIzIn19";
         // const tx = new Uint8Array([msg]);
-        // const transaction =  window.keplr.sendTx(chainId, tx, "sync");
+        // const transaction =  window.keplr.sendTx(chainId[network], tx, "sync");
         // return transaction;
         // console.log(arbitraryMsg);
         console.log(msg);

@@ -303,6 +303,10 @@ select {
   border-radius: 8px;
 }
 
+#user_value_locked {
+  display: none;
+}
+
 .landing {
   position: relative;
 }
