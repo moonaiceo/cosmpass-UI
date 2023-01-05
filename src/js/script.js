@@ -191,8 +191,10 @@ get_count().then(async (value) => {
 const createVaultsList = async (vaults) => {
   vaultsCards.innerHTML = "";
   for (const vault of vaults){
-      console.log(vault.pool_id)
-      let balance = await get_user_usd_value_for_pool(vault.pool_id)
+      let balance = 0;
+      if (isUserConnected){
+        balance = await get_user_usd_value_for_pool(vault.pool_id)
+      }
       vaultsCards.innerHTML += `
       <div class="vaults__cards-item">
       <div class="vaults__cards-item__header">
