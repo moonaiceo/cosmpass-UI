@@ -1,55 +1,225 @@
-import { SigningStargateClient } from "@cosmjs/stargate";
+import { CosmWasmClient, SigningCosmWasmClient } from "@cosmjs/cosmwasm-stargate";
 
 const btnWallet = document.querySelector(".button__wallet");
 const btnModalAction = document.querySelector(".button__action");
 const modalActionLP = document.querySelector('.modal__action__lp');
-const chainId = "osmosis-1";
+const vaultsCards = document.querySelector('.vaults__cards__items');
+const chainId = "osmo-test-4";
+const rpcEndPoint = "https://rpc-test.osmosis.zone/";
 let offlineSigner;
 let account;
-
+let pools;
 
 const type_of_msg = "WithdrawLP";
 
+const contractAddress = {
+  "malaga-420":
+    "wasm1v8484th79cv2vh49sq949auu20yla3jh7rypzytp50quyly552vs3a4ugd",
+  "osmo-test-4":
+    "osmo1sm8weyvz7ues2mx9eg6rnqu9yazjdwru5p6u7u0jkhgmk6vqt8equ8t5xp",
+  "uni-3": "juno1yfp9zyx9zhqe77d05yqjx3ctqjhzha0xn5d9x8zxcpp658ks2hvqlfjt72",
+  "constantine-1":
+    "archway1wnuakyjhvlnepk2g9ncvvaks0zy0axgx70pet4jh2nv8lmsuff9qseuvpc"
+};
+
+const get_count = async () => {
+    const client_rpc = await CosmWasmClient.connect(rpcEndPoint);
+    const getCount = await client_rpc.queryContractSmart("osmo16hjln5cvs0magddmzheqfljeq2s5wwuf2pe37a269fv98evep3dq6tj246", {"query_pools": {}})
+    return getCount;
+};
+
+get_count().then((value) => {
+  if (localStorage.getItem("isLoggedIn")){
+    connectKeplr();
+  }
+  createVaultsList(value.pools);
+  $('.vaults__cards-item').each(function(i) {
+    $(this).on('click', function() {
+      createJson(); 
+      $('.modal__header__title').text($('.vaults__cards-item__header-title').eq(i).text());
+      $('.modal__header__subtitle').text($('.vaults__cards-item__header-subtitle').eq(i).text());
+      $('#coinLabelOne').text($('.vaults__cards-item__header-title').eq(i).text().trim().split('-')[0]);
+      $('#coinLabelTwo').text($('.vaults__cards-item__header-title').eq(i).text().trim().split('-')[1]);
+      $('#depositTokens').text(value.pools[i].token_a_name + " + " + value.pools[i].token_b_name);
+      $('#depositLP').text(value.pools[i].pool_id + " LP token");
+      $('.modal__header__icon').each(function(j) {
+        $(this).attr("src", $('.vaults__cards-item__header__icons').eq(i).find('.vaults__cards-item__header__icon').eq(j).attr("src"));
+      });
+      $('.modal__action__withdraw-label__header').text($('.vaults__cards-item__header-title').eq(i).text());
+      $('.modal__descr-item__descr').each(function(j) {
+        $(this).html($('.vaults__cards-item').eq(i).find('.vaults__cards-item__body-item__descr').eq(j).html());
+      });
+      $('.overlay, .modal').fadeIn('slow');
+      $("html").css("overflow", "hidden");
+    });
+  }); 
+  sort();
+
+  // Data attributes
+
+  $('.vaults__cards-item__header-title[data-name]').each(function(i) {
+    $(this)
+      .attr("data-name", $(this).text());
+  });
+  
+  $('.vaults__cards-item__body-item__descr[data-tvl]').each(function(i) {
+    $(this)
+      .attr("data-tvl", parseFloat($(this).text(), 10));
+  });
+  
+  $('.vaults__cards-item__body-item__descr[data-apy]').each(function(i) {
+    $(this)
+      .attr("data-apy", parseFloat($(this).clone().children().remove().end().text(), 10));
+  });
+  
+  $('.vaults__cards-item__body-item__descr[data-daily]').each(function(i) {
+    $(this)
+      .attr("data-daily", parseFloat($(this).text(), 10));
+  });
+
+  // Sort
+
+  $('#sort').find('.select-items div').on('click', function() {
+    if ($(this).data("sort-type") !== "default") {
+      $(this).on('click', sortCards($(this).data("sort-type")));
+    } else {
+      $(this).on('click', sortCards("data-name"));
+    }
+  });
+
+  // Farms sort
+
+  $('#farms').find('.select-items div').on('click', function() {
+    let value;
+    if ($(this).text() !== "Active farms") {
+      value = $(this).text().toLowerCase();
+    } else {
+      value = "";
+    }
+    $(".vaults__cards-item").filter(function() {
+      $(this).toggle($(this).find(".vaults__cards-item__header-subtitle").text().toLowerCase().indexOf(value) > -1);
+    });
+  });
+});
+
+
+const createVaultsList = (vaults) => {
+  vaultsCards.innerHTML = "";
+
+  vaults.forEach((vault) => {
+      vaultsCards.innerHTML += `
+      <div class="vaults__cards-item">
+      <div class="vaults__cards-item__header">
+          <div class="vaults__cards-item__header__icons">
+              <div class="vaults__cards-item__header__circle_one">
+                  <img src="https://app.osmosis.zone/_next/image?url=%2Ftokens%2F${vault.token_a_name.toLowerCase()}.svg" alt="coin icon" class="vaults__cards-item__header__icon">
+              </div>
+
+              <div class="vaults__cards-item__header__circle_two">
+                  <img src="https://app.osmosis.zone/_next/image?url=%2Ftokens%2F${vault.token_b_name.toLowerCase()}.svg" alt="coin icon" class="vaults__cards-item__header__icon">
+              </div>
+          </div>
+
+          <div class="vaults__cards-item__header__text">
+              <div class="vaults__cards-item__header-title" data-name>${vault.token_a_name} - ${vault.token_b_name}</div>
+              <div class="vaults__cards-item__header-subtitle">Farm: Osmosis</div>
+          </div>
+
+      </div>
+
+
+      <div class="vaults__cards-item__body">
+          <div class="vaults__cards-item__body-items">
+              <div class="vaults__cards-item__body-item balance">
+                  <div class="vaults__cards-item__body-item__title">My Balance</div>
+                  <div class="vaults__cards-item__body-item__descr">187.67k USD <span class="span-balance">158 USD</span></div>
+              </div>
+
+              <div class="vaults__cards-item__body-item">
+                  <div class="vaults__cards-item__body-item__title">TVL</div>
+                  <div class="vaults__cards-item__body-item__descr" data-tvl>${vault.tvl} USD</div>
+              </div>
+
+              <div class="vaults__cards-item__body-item">
+                  <div class="vaults__cards-item__body-item__title">APY</div>
+                  <div class="vaults__cards-item__body-item__descr label-apy" data-apy>${vault.apy}%</div>
+              </div>
+
+              <div class="vaults__cards-item__body-item">
+                  <div class="vaults__cards-item__body-item__title">Daily</div>
+                  <div class="vaults__cards-item__body-item__descr" data-daily>${vault.daily_apr}%</div>
+              </div>
+          </div>
+      </div>
+  </div>
+      `;
+  });
+};
+
+
+btnModalAction.addEventListener("click", function (elem){
+ deposit_funds(offlineSigner, account, this);
+});
+
 btnWallet.addEventListener("click", () => connectKeplr());
 
-async function sendMoney(offlineSigner, account) {
-  console.log(offlineSigner, account);
-
+async function deposit_funds(offlineSigner, account, element) {
+  // get exponent of current token by querying https://api-osmosis.imperator.co/tokens/v2/all 
+  // for now set just mock exponent, for osmo exponent = 6. Might be 6, 8, 18 for other tokens
+  const exponent = 6;
+  let input1 = element.parentNode.querySelector('input[name="coin one"]').value;
+  let input2 = element.parentNode.querySelector('input[name="coin two"]').value;
   const withdrawLPInput = document.querySelector('input[name="withdraw_lp"]').value;
 
-  const stargateClient = await SigningStargateClient.connectWithSigner(
-    "https://rpc.osmosis.zone/",
+  const stargateClient = await SigningCosmWasmClient.connectWithSigner(
+    rpcEndPoint,
     offlineSigner
   );  
-  let msgJson = {
+  let msgJson1 = {
     "fromAddress": account.address,
-    "toAddress": "",
+    "toAddress": "osmo1e4d8k78fvdxqtt8uut8tkw3r6540wrtx6pwn90yp3ughpezzfy9s6t4tts",
     "amount":[
     {
       "denom":"uosmo",
-      "amount": (withdrawLPInput * 1000000).toString()
+      "amount": `${input1 * (10**exponent)}`
+    }
+    ]
+  };
+  let msgJson2 = {
+    "fromAddress": account.address,
+    "toAddress": "osmo1e4d8k78fvdxqtt8uut8tkw3r6540wrtx6pwn90yp3ughpezzfy9s6t4tts",
+    "amount":[
+    {
+      "denom":"uosmo",
+      "amount": `${input2 * (10**exponent)}`
     }
     ]
   };
   const test = await stargateClient.getAccount(account.address);
+  
   try {
     let transaction = await stargateClient.signAndBroadcast(
       account.address,
       [
         {
           typeUrl: '/cosmos.bank.v1beta1.MsgSend',
-          value: msgJson
+          value: msgJson1
+        },
+        {
+          typeUrl: '/cosmos.bank.v1beta1.MsgSend',
+          value: msgJson2
         }
       ],
       {
         gas: '200000',
-        amount: [{ denom: 'stake', amount: '1000000000' }]
+        amount: [{ denom: 'uosmo', amount: '10000' }]
       }
     );
     console.log(transaction);
+    statusModalShow("success");
   } catch (e){
     statusModalShow("error");
-    console.log("Error");
+    console.log(e);
   }
   
 }
@@ -60,6 +230,8 @@ async function connectKeplr() {
         // Enabling before using the Keplr is recommended.
         // This method will ask the user whether to allow access if they haven't visited this website.
         // Also, it will request that the user unlock the wallet if the wallet is locked.
+    }
+    else {
         await window.keplr.enable(chainId);
     
         offlineSigner = window.keplr.getOfflineSigner(chainId);
@@ -79,6 +251,7 @@ async function connectKeplr() {
         console.log(accounts[0]);
         btnWallet.innerHTML = accounts[0].address;
         btnWallet.classList.add('button__wallet_signed');
+        localStorage.setItem('isLoggedIn', true);
     
         // Initialize the gaia api with the offline signer that is injected by Keplr extension.
         // const cosmJS = new SigningCosmosClient(
@@ -120,7 +293,6 @@ $('.vaults__cards-item').each(function(i) {
 // }), false);
 
 
-btnModalAction.addEventListener("click", () => sendMoney(offlineSigner, account));
 
 
 async function createJson(type_of_msg) {
@@ -210,19 +382,21 @@ $('.overlay').on('click', function(e) {
   }
 });
 
-$('.vaults__cards-item').each(function(i) {
-  $(this).on('click', function() {
-    createJson(); 
-    $('.modal__header__title').text($('.vaults__cards-item__header-title').eq(i).text());
-    $('.modal__header__subtitle').text($('.vaults__cards-item__header-subtitle').eq(i).text());
-    $('.modal__action__withdraw-label__header').text($('.vaults__cards-item__header-title').eq(i).text());
-    $('.modal__descr-item__descr').each(function(j) {
-      $(this).html($('.vaults__cards-item').eq(i).find('.vaults__cards-item__body-item__descr').eq(j).html());
-    });
-    $('.overlay, .modal').fadeIn('slow');
-    $("html").css("overflow", "hidden");
-  });
-});
+
+
+// $('.vaults__cards__items').on('click', '.vaults__cards-item', function(i) {
+//   $(this).on('click', function(i) {
+//     createJson(); 
+//     $('.modal__header__title').text($('.vaults__cards-item__header-title').eq(i).text());
+//     $('.modal__header__subtitle').text($('.vaults__cards-item__header-subtitle').eq(i).text());
+//     $('.modal__action__withdraw-label__header').text($('.vaults__cards-item__header-title').eq(i).text());
+//     $('.modal__descr-item__descr').each(function(j) {
+//       $(this).html($('.vaults__cards-item').eq(i).find('.vaults__cards-item__body-item__descr').eq(j).html());
+//     });
+//     $('.overlay, .modal').fadeIn('slow');
+//     $("html").css("overflow", "hidden");
+//   });
+// });
 
 $('.vaults__settings-views').on('click', ':not(.vaults__settings-views__view_active)', function() {
   $(this)
@@ -296,6 +470,8 @@ $("#fsearch").on("keyup", function() {
 
 // Dropdown
 
+function sort() {
+  
 var x, i, j, l, ll, selElmnt, a, b, c;
 /* Look for any elements with the class "custom-select": */
 x = document.getElementsByClassName("custom-select");
@@ -352,6 +528,8 @@ for (i = 0; i < l; i++) {
   });
 }
 
+}
+
 function closeAllSelect(elmnt) {
   /* A function that will close all select boxes in the document,
   except the current select box: */
@@ -378,59 +556,8 @@ function closeAllSelect(elmnt) {
 then close all select boxes: */
 document.addEventListener("click", closeAllSelect);
 
-// Data attributes
-
-$('.vaults__cards-item__header-title[data-name]').each(function(i) {
-  $(this)
-    .attr("data-name", $(this).text());
-});
-
-$('.vaults__cards-item__body-item__descr[data-tvl]').each(function(i) {
-  $(this)
-    .attr("data-tvl", parseFloat($(this).text(), 10));
-});
-
-$('.vaults__cards-item__body-item__descr[data-apy]').each(function(i) {
-  $(this)
-    .attr("data-apy", parseFloat($(this).clone().children().remove().end().text(), 10));
-});
-
-$('.vaults__cards-item__body-item__descr[data-daily]').each(function(i) {
-  $(this)
-    .attr("data-daily", parseFloat($(this).text(), 10));
-});
-
-// Sort
-
-$('#sort').find('.select-items div').on('click', function() {
-  if ($(this).data("sort-type") !== "default") {
-    $(this).on('click', sortCards($(this).data("sort-type")));
-  } else {
-    $(this).on('click', sortCards("data-name"));
-  }
-});
-
-// Farms sort
-
-$('#farms').find('.select-items div').on('click', function() {
-  let value;
-  if ($(this).text() !== "Active farms") {
-    value = $(this).text().toLowerCase();
-  } else {
-    value = "";
-  }
-  $(".vaults__cards-item").filter(function() {
-    $(this).toggle($(this).find(".vaults__cards-item__header-subtitle").text().toLowerCase().indexOf(value) > -1);
-  });
-});
-
 function sortCards(sortType) {
   let gridItems = document.querySelector('.vaults__cards__items');
-  let farmsSort = document.querySelector('#farms .select-selected').textContent;
-
-  // for (let i = 0; i < gridItems.children.length; i++) {
-  //   gridItems.children[i].style.display = `block`;
-  // }
 
   for (let i = 0; i < gridItems.children.length; i++) {
     for (let j = i; j < gridItems.children.length; j++) {
@@ -440,29 +567,7 @@ function sortCards(sortType) {
       }
     }
   }
-
-  // for (let i = 0; i < gridItems.children.length; i++) {
-  //   if (gridItems.children[i].querySelector(".vaults__cards-item__header-subtitle").textContent !== farmsSort) {
-  //     gridItems.children[i].style.display = `none`;
-  //   }
-  //   else {
-  //     gridItems.children[i].style.display = `block`;
-  //   }
-  // }
 }
-
-// function sortByFarm(sortFarm) {
-//   let gridItems = document.querySelector('.vaults__cards__items');
-
-//   for (let i = 0; i < gridItems.children.length; i++) {
-//     for (let j = i; j < gridItems.children.length; j++) {
-//       if (gridItems.children[i].querySelector(".vaults__cards-item__header-subtitle").getAttribute(sortFarm) === gridItems.children[j].querySelector(".vaults__cards-item__header-subtitle").textContent) {
-//         let replacedNode = gridItems.replaceChild(gridItems.children[j], gridItems.children[i]);
-//         insertAfter(replacedNode, gridItems.children[i]);
-//       }
-//     }
-//   }
-// }
 
 function insertAfter(elem, refElem) {
   return refElem.parentNode.insertBefore(elem, refElem.nextSibling);

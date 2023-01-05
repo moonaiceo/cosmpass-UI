@@ -5,6 +5,14 @@
   font-family: "Montserrat", sans-serif;
   color: #fff;
 }
+*::-moz-selection { /* Code for Firefox */
+  color: black;
+  background: white;
+}
+*::selection {
+  color: black;
+  background: white;
+}
 
 html {
   overflow-y: overlay;
@@ -13,6 +21,12 @@ html {
 a {
   text-decoration: none;
   color: #fff;
+  user-drag: none;
+  -webkit-user-drag: none;
+  user-select: none;
+  -moz-user-select: none;
+  -webkit-user-select: none;
+  -ms-user-select: none;
 }
 
 img {
@@ -20,6 +34,12 @@ img {
   -moz-user-select: none;
   -ms-user-select: none;
   user-select: none;
+  user-drag: none;
+  -webkit-user-drag: none;
+  user-select: none;
+  -moz-user-select: none;
+  -webkit-user-select: none;
+  -ms-user-select: none;
 }
 
 button {
@@ -132,6 +152,12 @@ select {
   padding-left: 24px;
   margin-bottom: 8px;
   margin-right: 16px;
+  font-weight: 510;
+  font-size: 14px;
+  color: #4A4A4A;
+}
+
+#depositTokens, #depositLP {
   font-weight: 510;
   font-size: 14px;
   color: #4A4A4A;

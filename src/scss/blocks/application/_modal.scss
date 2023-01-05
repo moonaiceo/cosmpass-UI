@@ -283,6 +283,10 @@
             position: relative;
             margin-right: 64px;
         }
+        &__icon {
+            width: 24px;
+            height: 24px;
+        }
         &__circle {
             &_one {
                 position: absolute;
@@ -292,6 +296,9 @@
                 height: 32px;
                 background: #343232;
                 border-radius: 100px;
+                display: flex;
+                justify-content: center;
+                align-items: center;
             }
             &_two {
                 position: absolute;
@@ -301,6 +308,9 @@
                 height: 32px;
                 background:  #767676;
                 border-radius: 100px;
+                display: flex;
+                justify-content: center;
+                align-items: center;
             }
         }
     }

@@ -5,6 +5,14 @@
   font-family: "Montserrat", sans-serif;
   color: #fff;
 }
+*::-moz-selection { /* Code for Firefox */
+  color: black;
+  background: white;
+}
+*::selection {
+  color: black;
+  background: white;
+}
 
 html {
   overflow-y: overlay;
@@ -13,6 +21,12 @@ html {
 a {
   text-decoration: none;
   color: #fff;
+  user-drag: none;
+  -webkit-user-drag: none;
+  user-select: none;
+  -moz-user-select: none;
+  -webkit-user-select: none;
+  -ms-user-select: none;
 }
 
 img {
@@ -20,6 +34,12 @@ img {
   -moz-user-select: none;
   -ms-user-select: none;
   user-select: none;
+  user-drag: none;
+  -webkit-user-drag: none;
+  user-select: none;
+  -moz-user-select: none;
+  -webkit-user-select: none;
+  -ms-user-select: none;
 }
 
 button {
@@ -132,6 +152,12 @@ select {
   padding-left: 24px;
   margin-bottom: 8px;
   margin-right: 16px;
+  font-weight: 510;
+  font-size: 14px;
+  color: #4A4A4A;
+}
+
+#depositTokens, #depositLP {
   font-weight: 510;
   font-size: 14px;
   color: #4A4A4A;
@@ -532,6 +558,10 @@ select {
   position: relative;
   margin-right: 64px;
 }
+.vaults__cards-item__header__icon {
+  width: 24px;
+  height: 24px;
+}
 .vaults__cards-item__header__circle_one {
   position: absolute;
   top: 0;
@@ -540,6 +570,9 @@ select {
   height: 32px;
   background: #FFFFFF;
   border-radius: 100px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 .vaults__cards-item__header__circle_two {
   position: absolute;
@@ -549,6 +582,9 @@ select {
   height: 32px;
   background: #A4A4A4;
   border-radius: 100px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 .vaults__cards-item__body {
   margin-top: 21px;
@@ -895,6 +931,10 @@ select {
   position: relative;
   margin-right: 64px;
 }
+.modal__header__icon {
+  width: 24px;
+  height: 24px;
+}
 .modal__header__circle_one {
   position: absolute;
   top: 0;
@@ -903,6 +943,9 @@ select {
   height: 32px;
   background: #343232;
   border-radius: 100px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 .modal__header__circle_two {
   position: absolute;
@@ -912,6 +955,9 @@ select {
   height: 32px;
   background: #767676;
   border-radius: 100px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 .modal__mini {
   position: absolute;
