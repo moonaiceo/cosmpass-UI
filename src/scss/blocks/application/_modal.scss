@@ -344,4 +344,21 @@
             color: #38C216;
         }
     }
+    .available_balance{
+        margin-top: 5px;
+
+        span{
+            font-weight: 510;
+            font-size: 12px;
+            color: #8C8B8B;
+            margin-right: 5px;
+        }
+        .certain_balance{
+            font-weight: 510;
+
+            text-align: center;
+            cursor: pointer;
+            color: #30C30C;
+        }
+    }
 }

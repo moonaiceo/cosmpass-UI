@@ -24,6 +24,7 @@ let pools;
 
 const type_of_msg = "WithdrawLP";
 
+
 const contractAddress = {
   "malaga-420":
     "wasm1v8484th79cv2vh49sq949auu20yla3jh7rypzytp50quyly552vs3a4ugd",
@@ -79,6 +80,8 @@ async function get_user_usd_value_for_pool(id){
   return total_usd_value;
 }
 
+
+
 async function get_users_value_locked(){
   const url = `${lcdEndPoint[network]}/osmosis/lockup/v1beta1/account_locked_longer_duration/${account.address}`
   let total_usd_value = 0;
@@ -105,6 +108,20 @@ function show_user_related_elements(){
   get_users_value_locked()
 }
 
+async function setBalances(denom1, denom2){
+  const account_address = account.address
+
+  const response = await $.get(`${lcdEndPoint[network]}cosmos/bank/v1beta1/balances/${account_address}`);
+  console.log(response)
+  const balance1 = response['balances'].find((b) => b.denom === denom1);
+  const balance2 = response['balances'].find((b) => b.denom === denom2);
+  if (balance1 === undefined && balance2 === undefined){
+    return [0, 0]
+  } else {
+    return [balance1, balance2]
+  }
+}
+
 get_count().then(async (value) => {
   if (localStorage.getItem("isLoggedIn")){
     await connectKeplr();
@@ -117,7 +134,15 @@ get_count().then(async (value) => {
     show_user_related_elements()
   }
   $('.vaults__cards-item').each(function(i) {
-    $(this).on('click', function() {
+    $(this).on('click', async function() {
+      if (isUserConnected) {
+        let balances = await setBalances(value.pools[i].token_a_addr, value.pools[i].token_b_addr)
+        $('.certain_balance')[0].innerHTML = balances[0];
+        $('#coinBalanceOne').attr("value", balances[0]);
+        $('.certain_balance')[1].innerHTML = balances[1];
+        $('#coinBalanceTwo').attr("value", balances[1]);
+      }
+
       createJson(); 
       $('.modal__header__title').text($('.vaults__cards-item__header-title').eq(i).text());
       $('.modal__header__subtitle').text($('.vaults__cards-item__header-subtitle').eq(i).text());
@@ -127,6 +152,7 @@ get_count().then(async (value) => {
       $('#depositLP').text(value.pools[i].pool_id + " LP token");
       $('input[name="coin one"]').attr("address", value.pools[i].token_a_addr)
       $('input[name="coin two"]').attr("address", value.pools[i].token_b_addr)
+      
       $('.modal__header__icon').each(function(j) {
         $(this).attr("src", $('.vaults__cards-item__header__icons').eq(i).find('.vaults__cards-item__header__icon').eq(j).attr("src"));
       });

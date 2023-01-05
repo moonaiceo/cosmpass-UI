@@ -97,7 +97,6 @@
             </div>
         </div>
     </section>
-
     <div class="overlay">
         <div class="modal">
             <div class="modal__header">
@@ -179,6 +178,7 @@
                         <div class="modal__action__deposit__coins">
                             <div class="modal__action__deposit__coins-item">
                                 <div class="modal__action__deposit__coins-item__label" id="coinLabelOne"></div>
+                                <div class="modal__action__deposit__coins-item__label available_balance" id="coinBalanceOne" data-input="coin one" onclick="setBalanceToInput(this)"><span>Available:</span> <span class="certain_balance">-</span> </div>
                                 <div class="modal__action__deposit__coins-item__input modal__action__deposit__coins-item__input_one">
                                     <input type="number" name="coin one">
                                 </div>
@@ -186,6 +186,7 @@
         
                             <div class="modal__action__deposit__coins-item">
                                 <div class="modal__action__deposit__coins-item__label" id="coinLabelTwo"></div>
+                                <div class="modal__action__deposit__coins-item__label available_balance" id="coinBalanceTwo" data-input="coin two" onclick="setBalanceToInput(this)"><span>Available:</span> <span class="certain_balance">-</span> </div>
                                 <div class="modal__action__deposit__coins-item__input modal__action__deposit__coins-item__input_two">
                                     <input type="number" name="coin two">
                                 </div>
@@ -246,10 +247,18 @@
 
         <div class="modal__mini__descr">Отлично! У вас успешно получилось пополнить</div>
     </div>
+
 </body>
 
     <script src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
     <script src="https://code.jquery.com/jquery-migrate-1.2.1.min.js"></script>
     <script src="js/script.js"></script>
+    <script>
+
+    function setBalanceToInput(elem){
+        let input = document.querySelector(`input[name="${elem.getAttribute("data-input")}"]`)
+        input.value = elem.getAttribute("value")
+    }
+    </script>
 </body>
 </html>
