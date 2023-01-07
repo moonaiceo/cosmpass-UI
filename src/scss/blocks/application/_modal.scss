@@ -167,6 +167,17 @@
                 margin-top: 24px;
                 display: flex;
                 justify-content: space-between;
+                &-tokens {
+                    display: flex;
+                    width: 100%;
+                    justify-content: space-between;
+                }
+                &-lp {
+                    display: none;
+                    input{
+                        width: 100%;
+                    }
+                }
                 &-item {
                     &__label {
                         font-weight: 510;
@@ -215,6 +226,20 @@
                                 top: 50%;
                                 transform: translateY(-50%);
                                 background: #A4A4A4;
+                                border-radius: 100px;
+                            }
+                        }
+                        &_three {
+                            width: 536px;
+                            &:after {
+                                content: '';
+                                position: absolute;
+                                display: block;
+                                width: 20px;
+                                height: 20px;
+                                top: 50%;
+                                transform: translateY(-50%);
+                                background: #4A4A4A;
                                 border-radius: 100px;
                             }
                         }

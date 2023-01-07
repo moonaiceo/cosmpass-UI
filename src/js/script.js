@@ -108,18 +108,24 @@ function show_user_related_elements(){
   get_users_value_locked()
 }
 
-async function setBalances(denom1, denom2){
-  const account_address = account.address
+function getBalance(response, denom){
+  let balance = 0;
+  if (response['balances'].find((b) => b.denom === denom) != undefined) {
+      balance = response['balances'].find((b) => b.denom === denom);
+  } 
+  return balance;
+}
+
+
+async function setBalances(denom1, denom2, denom3){
+  const account_address = account.address;
 
   const response = await $.get(`${lcdEndPoint[network]}cosmos/bank/v1beta1/balances/${account_address}`);
-  console.log(response)
-  const balance1 = response['balances'].find((b) => b.denom === denom1);
-  const balance2 = response['balances'].find((b) => b.denom === denom2);
-  if (balance1 === undefined && balance2 === undefined){
-    return [0, 0]
-  } else {
-    return [balance1, balance2]
-  }
+  const balance1 = getBalance(response, denom1);
+  const balance2 = getBalance(response, denom2);
+  const balance3 = getBalance(response, denom3);
+
+  return [balance1, balance2, balance3];
 }
 
 get_count().then(async (value) => {
@@ -128,30 +134,34 @@ get_count().then(async (value) => {
   }
   await createVaultsList(value.pools);
   if (isUserConnected === false){
-    hide_user_related_elements()
+    hide_user_related_elements();
   }
   else {
-    show_user_related_elements()
+    show_user_related_elements();
   }
   $('.vaults__cards-item').each(function(i) {
     $(this).on('click', async function() {
+      let gamm = `gamm/pool/${value.pools[i].pool_id}`;
       if (isUserConnected) {
-        let balances = await setBalances(value.pools[i].token_a_addr, value.pools[i].token_b_addr)
+        let balances = await setBalances(value.pools[i].token_a_addr, value.pools[i].token_b_addr, gamm);
         $('.certain_balance')[0].innerHTML = balances[0];
         $('#coinBalanceOne').attr("value", balances[0]);
         $('.certain_balance')[1].innerHTML = balances[1];
         $('#coinBalanceTwo').attr("value", balances[1]);
+        $('.certain_balance')[2].innerHTML = balances[2];
+        $('#coinBalanceThree').attr("value", balances[2]);
       }
-
       createJson(); 
       $('.modal__header__title').text($('.vaults__cards-item__header-title').eq(i).text());
       $('.modal__header__subtitle').text($('.vaults__cards-item__header-subtitle').eq(i).text());
       $('#coinLabelOne').text($('.vaults__cards-item__header-title').eq(i).text().trim().split('-')[0]);
       $('#coinLabelTwo').text($('.vaults__cards-item__header-title').eq(i).text().trim().split('-')[1]);
+      $('#coinLabelThree').text(gamm);
       $('#depositTokens').text(value.pools[i].token_a_name + " + " + value.pools[i].token_b_name);
       $('#depositLP').text(value.pools[i].pool_id + " LP token");
       $('input[name="coin one"]').attr("address", value.pools[i].token_a_addr)
       $('input[name="coin two"]').attr("address", value.pools[i].token_b_addr)
+      $('input[name="coin three"]').attr("address", gamm)
       
       $('.modal__header__icon').each(function(j) {
         $(this).attr("src", $('.vaults__cards-item__header__icons').eq(i).find('.vaults__cards-item__header__icon').eq(j).attr("src"));
@@ -162,6 +172,8 @@ get_count().then(async (value) => {
       });
       $('.overlay, .modal').fadeIn('slow');
       $("html").css("overflow", "hidden");
+      showTokensInput();
+
     });
   }); 
   sort();
@@ -278,54 +290,78 @@ btnModalAction.addEventListener("click", function (elem){
 
 btnWallet.addEventListener("click", () => connectKeplr());
 
-async function deposit_funds(offlineSigner, account, element) {
+function showLpInput(){
+  $(".modal__action__deposit__coins-tokens").hide();
+  $(".modal__action__deposit__coins-lp").show();
+}
+
+function showTokensInput() {
+  $(".modal__action__deposit__coins-tokens").show();
+  $(".modal__action__deposit__coins-lp").hide();
+}
+
+$('input[type=radio][name=deposit-coin]').change(function() {
+  if (this.value === 'tokens') {
+    showTokensInput();
+  }
+  else if (this.value === 'lp') {
+    showLpInput();
+  }
+});
+
+function createMsgSendJson(denom, value) {
   // get exponent of current token by querying https://api-osmosis.imperator.co/search/v1/exponent?symbol=OSMO
   // for now set just mock exponent, for osmo exponent = 6. Might be 6, 8, 18 for other tokens
   const exponent = 6;
+  return {
+    "denom": denom,
+    "amount": `${value * (10**exponent)}`
+  }
+}
+
+async function deposit_funds(offlineSigner, account, element) {
+
   let input1 = element.parentNode.querySelector('input[name="coin one"]');
   let input2 = element.parentNode.querySelector('input[name="coin two"]');
+  let input3 = element.parentNode.querySelector('input[name="coin three"]');
+  let choiceOfType = element.parentNode.querySelector('input[type=radio][name=deposit-coin]:checked').value;
   let denom1 = input1.getAttribute("address");
   let denom2 = input2.getAttribute("address");
+  let denom3 = input3.getAttribute("address");
   const withdrawLPInput = document.querySelector('input[name="withdraw_lp"]').value;
-
+  let msgJson = {};
   const stargateClient = await SigningCosmWasmClient.connectWithSigner(
     rpcEndPoint[network],
     offlineSigner
-  );  
-  let msgJson1 = {
-    "fromAddress": account.address,
-    "toAddress": "osmo1e4d8k78fvdxqtt8uut8tkw3r6540wrtx6pwn90yp3ughpezzfy9s6t4tts",
-    "amount":[
-    {
-      "denom": denom1,
-      "amount": `${input1.value * (10**exponent)}`
-    }
-    ]
-  };
-  let msgJson2 = {
-    "fromAddress": account.address,
-    "toAddress": "osmo1e4d8k78fvdxqtt8uut8tkw3r6540wrtx6pwn90yp3ughpezzfy9s6t4tts",
-    "amount":[
-    {
-      "denom": denom2,
-      "amount": `${input2.value * (10**exponent)}`
-    }
-    ]
-  };
-  const test = await stargateClient.getAccount(account.address);
-  
+  ); 
+  console.log(choiceOfType);
+  if (choiceOfType === "tokens"){
+    msgJson = {
+      "fromAddress": account.address,
+      "toAddress": "osmo1e4d8k78fvdxqtt8uut8tkw3r6540wrtx6pwn90yp3ughpezzfy9s6t4tts",
+      "amount":[
+        createMsgSendJson(denom1, input1.value),
+        createMsgSendJson(denom2, input2.value),
+      ]
+    };
+  } else{
+    msgJson = {
+      "fromAddress": account.address,
+      "toAddress": "osmo1e4d8k78fvdxqtt8uut8tkw3r6540wrtx6pwn90yp3ughpezzfy9s6t4tts",
+      "amount":[
+        createMsgSendJson(denom3, input3.value),
+      ]
+    };
+  }
   try {
     let transaction = await stargateClient.signAndBroadcast(
       account.address,
       [
         {
           typeUrl: '/cosmos.bank.v1beta1.MsgSend',
-          value: msgJson1
+          value: msgJson
         },
-        {
-          typeUrl: '/cosmos.bank.v1beta1.MsgSend',
-          value: msgJson2
-        }
+     
       ],
       {
         gas: '200000',

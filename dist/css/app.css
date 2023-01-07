@@ -835,6 +835,17 @@ select {
   display: flex;
   justify-content: space-between;
 }
+.modal__action__deposit__coins-tokens {
+  display: flex;
+  width: 100%;
+  justify-content: space-between;
+}
+.modal__action__deposit__coins-lp {
+  display: none;
+}
+.modal__action__deposit__coins-lp input {
+  width: 100%;
+}
 .modal__action__deposit__coins-item__label {
   font-weight: 510;
   font-size: 12px;
@@ -880,6 +891,20 @@ select {
   top: 50%;
   transform: translateY(-50%);
   background: #A4A4A4;
+  border-radius: 100px;
+}
+.modal__action__deposit__coins-item__input_three {
+  width: 536px;
+}
+.modal__action__deposit__coins-item__input_three:after {
+  content: "";
+  position: absolute;
+  display: block;
+  width: 20px;
+  height: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: #4A4A4A;
   border-radius: 100px;
 }
 .modal__actions {

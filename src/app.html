@@ -144,13 +144,13 @@
                     <form id="deposit-form" class="deposit-form" action="#">
                         <label class="label">
                             <span id="depositTokens"></span>
-                            <input type="radio" name="deposit-coin" checked>
+                            <input type="radio" name="deposit-coin" value="tokens" checked>
                             <span class="checkmark"></span>
                         </label>
 
                         <label class="label">
                             <span id="depositLP"></span>
-                            <input type="radio" name="deposit-coin">
+                            <input type="radio" name="deposit-coin" value="lp">
                             <span class="checkmark"></span>
                         </label>
     
@@ -176,13 +176,15 @@
                         </div>
     
                         <div class="modal__action__deposit__coins">
-                            <div class="modal__action__deposit__coins-item">
-                                <div class="modal__action__deposit__coins-item__label" id="coinLabelOne"></div>
-                                <div class="modal__action__deposit__coins-item__label available_balance" id="coinBalanceOne" data-input="coin one" onclick="setBalanceToInput(this)"><span>Available:</span> <span class="certain_balance">-</span> </div>
-                                <div class="modal__action__deposit__coins-item__input modal__action__deposit__coins-item__input_one">
-                                    <input type="number" name="coin one">
+                            <div class="modal__action__deposit__coins-tokens">
+                                <div class="modal__action__deposit__coins-item">
+                                    <div class="modal__action__deposit__coins-item__label" id="coinLabelOne"></div>
+                                    <div class="modal__action__deposit__coins-item__label available_balance" id="coinBalanceOne" data-input="coin one" onclick="setBalanceToInput(this)"><span>Available:</span> <span class="certain_balance">-</span> </div>
+                                    <div class="modal__action__deposit__coins-item__input modal__action__deposit__coins-item__input_one">
+                                        <input type="number" name="coin one">
+                                    </div>
                                 </div>
-                            </div>
+                        
         
                             <div class="modal__action__deposit__coins-item">
                                 <div class="modal__action__deposit__coins-item__label" id="coinLabelTwo"></div>
@@ -191,6 +193,18 @@
                                     <input type="number" name="coin two">
                                 </div>
                             </div>
+                        </div>
+
+                            <div class="modal__action__deposit__coins-lp">
+                            <div class="modal__action__deposit__coins-item">
+                                <div class="modal__action__deposit__coins-item__label" id="coinLabelThree"></div>
+                                <div class="modal__action__deposit__coins-item__label available_balance" id="coinBalanceThree" data-input="coin three" value="0" onclick="setBalanceToInput(this)"><span>Available:</span> <span class="certain_balance">-</span> </div>
+                                <div class="modal__action__deposit__coins-item__input modal__action__deposit__coins-item__input_three">
+                                    <input type="number" name="coin three">
+                                </div>
+                            </div>
+                        </div>
+
                         </div>
                     </form>
                         
@@ -238,7 +252,6 @@
         
         <button class="button button__action button__action_active">Deposit</button>
     </div>
-    </div>
             
     <div class="modal__mini">
         <div class="modal__mini__icon">
@@ -246,6 +259,7 @@
         </div>
 
         <div class="modal__mini__descr">Отлично! У вас успешно получилось пополнить</div>
+    </div>
     </div>
 
 </body>
