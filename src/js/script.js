@@ -21,6 +21,7 @@ let isUserConnected = false;
 let offlineSigner;
 let account;
 let pools;
+let user_sc_addresses = {}
 
 const type_of_msg = "WithdrawLP";
 
@@ -104,6 +105,7 @@ function hide_user_related_elements(){
 
 function show_user_related_elements(){
   $('#user_value_locked').show();
+  $('#myVaults').show();
   $('.vaults__cards-item__body-item.balance').css("display", "flex");
   get_users_value_locked()
 }
@@ -222,6 +224,10 @@ get_count().then(async (value) => {
     $(".vaults__cards-item").filter(function() {
       $(this).toggle($(this).find(".vaults__cards-item__header-subtitle").text().toLowerCase().indexOf(value) > -1);
     });
+    if ($('#myVaults').hasClass("vaults__settings-views__view_active")){
+      hide_none_user_vaults()
+    }
+
   });
 });
 
@@ -233,8 +239,9 @@ const createVaultsList = async (vaults) => {
       if (isUserConnected){
         balance = await get_user_usd_value_for_pool(vault.pool_id)
       }
+      console.log(balance)
       vaultsCards.innerHTML += `
-      <div class="vaults__cards-item">
+      <div class="vaults__cards-item " name="${balance > 0 ? 'user_vault' : ''}">
       <div class="vaults__cards-item__header">
           <div class="vaults__cards-item__header__icons">
               <div class="vaults__cards-item__header__circle_one">
@@ -258,7 +265,7 @@ const createVaultsList = async (vaults) => {
           <div class="vaults__cards-item__body-items">
               <div class="vaults__cards-item__body-item balance">
                   <div class="vaults__cards-item__body-item__title">My Balance</div>
-                  <div class="vaults__cards-item__body-item__descr">${numberWithSpaces(balance.toFixed(2))} USD </div>
+                  <div class="vaults__cards-item__body-item__descr ">${numberWithSpaces(balance.toFixed(2))} USD </div>
                   <!--  <span class="span-balance">158 USD</span> -->
               </div>
               <div class="cross_line"></div>
@@ -378,6 +385,7 @@ async function deposit_funds(offlineSigner, account, element) {
 }
 
 async function connectKeplr() {
+  
     if (!window.keplr) {
         alert("Please install keplr extension");
         // Enabling before using the Keplr is recommended.
@@ -406,7 +414,7 @@ async function connectKeplr() {
         btnWallet.classList.add('button__wallet_signed');
         localStorage.setItem('isLoggedIn', true);
         isUserConnected = true;
-    
+        get_count()
         // Initialize the gaia api with the offline signer that is injected by Keplr extension.
         // const cosmJS = new SigningCosmosClient(
         //     // "https://lcd-osmosis.keplr.app/rest",
@@ -419,7 +427,23 @@ async function connectKeplr() {
     
 }
 
+function hide_none_user_vaults(){
+  $('.vaults__cards-item').each(function(i) {
+    if ($(this).attr("name") != "user_vault"){
+        $(this).hide();
+    }
+  });
+}
 
+$('#myVaults').on('click', function() {
+  hide_none_user_vaults();
+});
+
+$('#allVaults').on('click', function() {
+  $('.vaults__cards-item').each(function(i) {
+    $(this).show();
+  });
+});
 
 
 $('.modal__action').on('click', 'li:not(.catalog__tab_active)', function() {
@@ -711,7 +735,7 @@ then close all select boxes: */
 document.addEventListener("click", closeAllSelect);
 
 function sortCards(sortType) {
-  let gridItems = document.querySelector('.vaults__cards__items');
+  let gridItems =  document.querySelector('.vaults__cards__items');
 
   for (let i = 0; i < gridItems.children.length; i++) {
     for (let j = i; j < gridItems.children.length; j++) {
@@ -720,6 +744,9 @@ function sortCards(sortType) {
         insertAfter(replacedNode, gridItems.children[i]);
       }
     }
+  }
+  if ($('#myVaults').hasClass("vaults__settings-views__view_active")){
+    hide_none_user_vaults()
   }
 }
 
