@@ -1045,7 +1045,6 @@ select {
   position: relative;
   width: 80px;
   height: 80px;
-  transition: 2s all;
 }
 
 .lds-roller div {

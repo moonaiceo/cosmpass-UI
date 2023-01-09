@@ -23,36 +23,21 @@ let account;
 let clientCosmWasm;
 let pools;
 let user_sc_addresses = {}
-const type_of_msg = "WithdrawLP";
-
 
 const contractAddress = {
   "malaga-420":
     "wasm1v8484th79cv2vh49sq949auu20yla3jh7rypzytp50quyly552vs3a4ugd",
   "osmo-test-4":
-    "osmo1sm8weyvz7ues2mx9eg6rnqu9yazjdwru5p6u7u0jkhgmk6vqt8equ8t5xp",
+    "osmo1xh7fzkxp63junffzazzxt9caumjjhrp6uf8nwdtw8mrry3gje42s4cdcxs",
   "uni-3": "juno1yfp9zyx9zhqe77d05yqjx3ctqjhzha0xn5d9x8zxcpp658ks2hvqlfjt72",
   "constantine-1":
     "archway1wnuakyjhvlnepk2g9ncvvaks0zy0axgx70pet4jh2nv8lmsuff9qseuvpc"
 };
 
-async function get_exponents_of_tokens(){
-  let response =  await $.get("https://api-osmosis.imperator.co/tokens/v2/all")
-  const newList = [];
-  for (const token of response) {
-    const item = {
-      denom: token.denom,
-      symbol: token.symbol,
-      exponent: token.exponent,
-    };
-    newList.push(item);
-  }
-  return newList
-}
 
 const get_count = async () => {
     const client_rpc = await CosmWasmClient.connect(rpcEndPoint[network]);
-    const getCount = await client_rpc.queryContractSmart("osmo16hjln5cvs0magddmzheqfljeq2s5wwuf2pe37a269fv98evep3dq6tj246", {"query_pools": {}})
+    const getCount = await client_rpc.queryContractSmart(contractAddress[chainId['testnet']], {"query_all_pools": {}})
     
     return getCount;
 };
@@ -77,6 +62,17 @@ async function calculate_usd_value(pool_id, user_shares_amount){
   let liquidity = await get_liquidity(pool_id)
   let total_shares = await get_total_shares(pool_id)
   return (liquidity / total_shares) * user_shares_amount
+}
+
+async function get_total_value_locked(){
+  const client_rpc = await CosmWasmClient.connect(rpcEndPoint[network]);
+  const allEntries = await client_rpc.queryContractSmart(contractAddress[chainId['testnet']], {"query_all_entries": {}});
+  let usd_value = 0;
+  for (const entry in allEntries){
+
+  }
+  $('#total_value_locked .promo__value__number').text(numberWithSpaces(usd_value.toFixed(2)) + " USD");
+
 }
 
 async function get_user_usd_value_for_pool(id){
@@ -126,10 +122,10 @@ function show_user_related_elements(){
 }
 
 function getBalance(response, denom){
-  
   let balance = 0;
+  let exponent = getExponent(denom);
   if (response['balances'].find((b) => b.denom === denom) != undefined) {
-      balance = response['balances'].find((b) => b.denom === denom)['amount'];
+      balance = response['balances'].find((b) => b.denom === denom)['amount'] / (10**exponent);
   } 
   return balance;
 }
@@ -150,7 +146,9 @@ get_count().then(async (value) => {
   if (localStorage.getItem("isLoggedIn")){
     await connectKeplr();
   }
+  console.log(value)
   await createVaultsList(value.pools);
+  await get_total_value_locked();
   if (isUserConnected === false){
     hide_user_related_elements();
   }
@@ -161,7 +159,7 @@ get_count().then(async (value) => {
     $(this).on('click', async function() {
       let gamm = `gamm/pool/${value.pools[i].pool_id}`;
       if (isUserConnected) {
-        let balances = await setBalances(value.pools[i].token_a_addr, value.pools[i].token_b_addr, gamm);
+        let balances = await setBalances(value.pools[i].token_1.denom, value.pools[i].token_2.denom, gamm);
         $('.certain_balance')[0].innerHTML = balances[0];
         $('#coinBalanceOne').attr("value", balances[0]);
         $('.certain_balance')[1].innerHTML = balances[1];
@@ -176,10 +174,10 @@ get_count().then(async (value) => {
       $('#coinLabelOne').text($('.vaults__cards-item__header-title').eq(i).text().trim().split('-')[0]);
       $('#coinLabelTwo').text($('.vaults__cards-item__header-title').eq(i).text().trim().split('-')[1]);
       $('#coinLabelThree').text(gamm);
-      $('#depositTokens').text(value.pools[i].token_a_name + " + " + value.pools[i].token_b_name);
+      $('#depositTokens').text(value.pools[i].token_1.symbol + " + " + value.pools[i].token_2.symbol);
       $('#depositLP').text(value.pools[i].pool_id + " LP token");
-      $('input[name="coin one"]').attr("address", value.pools[i].token_a_addr)
-      $('input[name="coin two"]').attr("address", value.pools[i].token_b_addr)
+      $('input[name="coin one"]').attr("address", value.pools[i].token_1.denom)
+      $('input[name="coin two"]').attr("address", value.pools[i].token_2.denom)
       $('input[name="coin three"]').attr("address", gamm)
       
       $('.modal__header__icon').each(function(j) {
@@ -262,16 +260,16 @@ const createVaultsList = async (vaults) => {
       <div class="vaults__cards-item__header">
           <div class="vaults__cards-item__header__icons">
               <div class="vaults__cards-item__header__circle_one">
-                  <img src="https://app.osmosis.zone/_next/image?url=%2Ftokens%2F${vault.token_a_name.toLowerCase()}.svg" alt="coin icon" class="vaults__cards-item__header__icon">
+                  <img src="${vault.token_1.icon_url}" alt="coin icon" class="vaults__cards-item__header__icon">
               </div>
 
               <div class="vaults__cards-item__header__circle_two">
-                  <img src="https://app.osmosis.zone/_next/image?url=%2Ftokens%2F${vault.token_b_name.toLowerCase()}.svg" alt="coin icon" class="vaults__cards-item__header__icon">
+                  <img src="${vault.token_2.icon_url}" alt="coin icon" class="vaults__cards-item__header__icon">
               </div>
           </div>
 
           <div class="vaults__cards-item__header__text">
-              <div class="vaults__cards-item__header-title" data-name>${vault.token_a_name} - ${vault.token_b_name}</div>
+              <div class="vaults__cards-item__header-title" data-name>${vault.token_1.symbol} - ${vault.token_2.symbol}</div>
               <div class="vaults__cards-item__header-subtitle">Farm: Osmosis</div>
           </div>
 
@@ -293,12 +291,12 @@ const createVaultsList = async (vaults) => {
 
               <div class="vaults__cards-item__body-item">
                   <div class="vaults__cards-item__body-item__title">APY</div>
-                  <div class="vaults__cards-item__body-item__descr label-apy" data-apy>${vault.apy}%</div>
+                  <div class="vaults__cards-item__body-item__descr label-apy" data-apy><span class="span-apy">${vault.apr.two_week}%</span>  ${vault.apy.two_week}%</div>
               </div>
 
               <div class="vaults__cards-item__body-item">
                   <div class="vaults__cards-item__body-item__title">Daily</div>
-                  <div class="vaults__cards-item__body-item__descr" data-daily>${vault.daily_apr}%</div>
+                  <div class="vaults__cards-item__body-item__descr" data-daily>${vault.apy.one_day}%</div>
               </div>
           </div>
       </div>
@@ -338,17 +336,20 @@ $('input[type=radio][name=deposit-coin]').change(function() {
   }
 });
 
-function createMsgSendJson(denom, value) {
-  // get exponent of current token by querying https://api-osmosis.imperator.co/search/v1/exponent?symbol=OSMO
-  // for now set just mock exponent, for osmo exponent = 6. Might be 6, 8, 18 for other tokens
+function getExponent(denom){
   let exponents = tokens;
-  console.log(exponents)
   let exponent;
   if (denom.includes("gamm")){
     exponent = 18;
   } else {
     exponent = exponents.find((b) => b.denom === denom)['exponent'];
   }
+  return exponent
+}
+function createMsgSendJson(denom, value) {
+  // get exponent of current token by querying https://api-osmosis.imperator.co/search/v1/exponent?symbol=OSMO
+  // for now set just mock exponent, for osmo exponent = 6. Might be 6, 8, 18 for other tokens
+  let exponent = getExponent(denom);
   return {
     "denom": denom,
     "amount": `${value * (10**exponent)}`
@@ -383,7 +384,6 @@ async function withdraw_funds(offlineSigner, account, element){
 }
 
 async function deposit_funds(offlineSigner, account, element) {
-
   let input1 = element.parentNode.querySelector('input[name="coin one"]');
   let input2 = element.parentNode.querySelector('input[name="coin two"]');
   let input3 = element.parentNode.querySelector('input[name="coin three"]');
@@ -402,11 +402,8 @@ async function deposit_funds(offlineSigner, account, element) {
       "fromAddress": account.address,
       "toAddress": "osmo1e4d8k78fvdxqtt8uut8tkw3r6540wrtx6pwn90yp3ughpezzfy9s6t4tts",
       "amount":[
-        // createMsgSendJson(denom1, input1.value),
-        // createMsgSendJson(denom2, input2.value),
-        createMsgSendJson("uosmo", input1.value),
-        createMsgSendJson("uion", input2.value),
-
+        createMsgSendJson(denom1, input1.value),
+        createMsgSendJson(denom2, input2.value),
       ]
     };
   } else{
@@ -419,7 +416,7 @@ async function deposit_funds(offlineSigner, account, element) {
     };
   }
   try {
-    showModalLoadingStatus()
+    showModalLoadingStatus();
     let transaction = await stargateClient.signAndBroadcast(
       account.address,
       [
@@ -434,7 +431,6 @@ async function deposit_funds(offlineSigner, account, element) {
         amount: [{ denom: 'uosmo', amount: '10000' }]
       }
     );
-    console.log(transaction);
     statusModalShow("success");
   } catch (e){
     statusModalShow("error");
@@ -708,6 +704,8 @@ function showModalLoadingStatus(){
   overlay.style.display = 'block';
   statusModal.style.display = 'flex';
   statusModal.previousElementSibling.style.display = 'none';
+  // $('.overlay, .modal__mini').fadeIn('slow');
+
 }
 // Search
 
