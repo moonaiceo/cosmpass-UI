@@ -1,5 +1,5 @@
 import { CosmWasmClient, SigningCosmWasmClient } from "@cosmjs/cosmwasm-stargate";
-
+import { tokens } from './constants.js';
 const btnWallet = document.querySelector(".button__wallet");
 const btnModalAction = document.querySelector(".button__action");
 const modalActionLP = document.querySelector('.modal__action__lp');
@@ -20,9 +20,9 @@ const lcdEndPoint = {
 let isUserConnected = false;
 let offlineSigner;
 let account;
+let clientCosmWasm;
 let pools;
 let user_sc_addresses = {}
-
 const type_of_msg = "WithdrawLP";
 
 
@@ -36,9 +36,24 @@ const contractAddress = {
     "archway1wnuakyjhvlnepk2g9ncvvaks0zy0axgx70pet4jh2nv8lmsuff9qseuvpc"
 };
 
+async function get_exponents_of_tokens(){
+  let response =  await $.get("https://api-osmosis.imperator.co/tokens/v2/all")
+  const newList = [];
+  for (const token of response) {
+    const item = {
+      denom: token.denom,
+      symbol: token.symbol,
+      exponent: token.exponent,
+    };
+    newList.push(item);
+  }
+  return newList
+}
+
 const get_count = async () => {
     const client_rpc = await CosmWasmClient.connect(rpcEndPoint[network]);
     const getCount = await client_rpc.queryContractSmart("osmo16hjln5cvs0magddmzheqfljeq2s5wwuf2pe37a269fv98evep3dq6tj246", {"query_pools": {}})
+    
     return getCount;
 };
 
@@ -111,9 +126,10 @@ function show_user_related_elements(){
 }
 
 function getBalance(response, denom){
+  
   let balance = 0;
   if (response['balances'].find((b) => b.denom === denom) != undefined) {
-      balance = response['balances'].find((b) => b.denom === denom);
+      balance = response['balances'].find((b) => b.denom === denom)['amount'];
   } 
   return balance;
 }
@@ -150,6 +166,7 @@ get_count().then(async (value) => {
         $('#coinBalanceOne').attr("value", balances[0]);
         $('.certain_balance')[1].innerHTML = balances[1];
         $('#coinBalanceTwo').attr("value", balances[1]);
+        console.log(balances)
         $('.certain_balance')[2].innerHTML = balances[2];
         $('#coinBalanceThree').attr("value", balances[2]);
       }
@@ -295,6 +312,11 @@ btnModalAction.addEventListener("click", function (elem){
  deposit_funds(offlineSigner, account, this);
 });
 
+$('#btnWithdraw').on('click', function (){
+  withdraw_funds(offlineSigner, account, this)
+})
+
+
 btnWallet.addEventListener("click", () => connectKeplr());
 
 function showLpInput(){
@@ -319,11 +341,45 @@ $('input[type=radio][name=deposit-coin]').change(function() {
 function createMsgSendJson(denom, value) {
   // get exponent of current token by querying https://api-osmosis.imperator.co/search/v1/exponent?symbol=OSMO
   // for now set just mock exponent, for osmo exponent = 6. Might be 6, 8, 18 for other tokens
-  const exponent = 6;
+  let exponents = tokens;
+  console.log(exponents)
+  let exponent;
+  if (denom.includes("gamm")){
+    exponent = 18;
+  } else {
+    exponent = exponents.find((b) => b.denom === denom)['exponent'];
+  }
   return {
     "denom": denom,
     "amount": `${value * (10**exponent)}`
   }
+}
+
+
+async function withdraw_funds(offlineSigner, account, element){
+  const stargateClient = await SigningCosmWasmClient.connectWithSigner(
+    rpcEndPoint[network],
+    offlineSigner,
+    {gasPrice: "0.002uosmo"}
+  ); 
+
+  let withdrawMsg = {
+    withdraw_tokens: {
+      to_address: account.address,
+      tokens: [{denom: "uosmo", amount: "100000"}]
+      }
+    }
+ 
+  try {
+    showModalLoadingStatus()
+    let transaction = await stargateClient.execute(account.address, "osmo1e4d8k78fvdxqtt8uut8tkw3r6540wrtx6pwn90yp3ughpezzfy9s6t4tts", withdrawMsg, "auto")
+    console.log(transaction);
+    statusModalShow("success");
+  } catch (e){
+    statusModalShow("error");
+    console.log(e);
+  }
+  
 }
 
 async function deposit_funds(offlineSigner, account, element) {
@@ -341,14 +397,16 @@ async function deposit_funds(offlineSigner, account, element) {
     rpcEndPoint[network],
     offlineSigner
   ); 
-  console.log(choiceOfType);
   if (choiceOfType === "tokens"){
     msgJson = {
       "fromAddress": account.address,
       "toAddress": "osmo1e4d8k78fvdxqtt8uut8tkw3r6540wrtx6pwn90yp3ughpezzfy9s6t4tts",
       "amount":[
-        createMsgSendJson(denom1, input1.value),
-        createMsgSendJson(denom2, input2.value),
+        // createMsgSendJson(denom1, input1.value),
+        // createMsgSendJson(denom2, input2.value),
+        createMsgSendJson("uosmo", input1.value),
+        createMsgSendJson("uion", input2.value),
+
       ]
     };
   } else{
@@ -361,6 +419,7 @@ async function deposit_funds(offlineSigner, account, element) {
     };
   }
   try {
+    showModalLoadingStatus()
     let transaction = await stargateClient.signAndBroadcast(
       account.address,
       [
@@ -614,20 +673,42 @@ $('.modal__action__withdraw-label__unbond').on('click', function() {
 
 function statusModalShow(status) {
   const statusModal = document.querySelector('.modal__mini');
+  const overlay = document.querySelector('.overlay');
+  const roller = statusModal.querySelector('.lds-roller');
   const modalIcon = statusModal.querySelector('.modal__mini__icon-img');
   const modalDescr = statusModal.querySelector('.modal__mini__descr');
   if (status === "error") {
     modalIcon.src = '../icons/error_circle.svg';
-    modalDescr.textContent = "Пополнение не выполнено!";
+    modalDescr.textContent = "Транзакция не выполнена!";
     modalDescr.style.color = "#C21616";
   } else if (status === "success") {
     modalIcon.src = '../icons/check_circle.svg';
-    modalDescr.textContent = "Отлично! У вас успешно получилось пополнить";
+    modalDescr.textContent = "Отлично! Транзакция успешно выполнена";
+    modalDescr.style.color = "#38C216";
   }
   statusModal.previousElementSibling.style.display = 'none';
+  roller.style.display = 'none';
   statusModal.style.display = 'block';
+  overlay.style.display = 'block';
+  modalIcon.style.display = 'block';
 }
 
+
+function showModalLoadingStatus(){
+  const modal = document.querySelector('.modal');
+  const overlay = document.querySelector('.overlay');
+  const statusModal = document.querySelector('.modal__mini');
+  const modalIcon = statusModal.querySelector('.modal__mini__icon-img');
+  const roller = statusModal.querySelector('.lds-roller');
+  const modalDescr = statusModal.querySelector('.modal__mini__descr');
+  roller.style.display = 'inline-block';
+  modalDescr.textContent = "";
+  modalIcon.style.display = 'none';
+  modal.style.display = 'none';
+  overlay.style.display = 'block';
+  statusModal.style.display = 'flex';
+  statusModal.previousElementSibling.style.display = 'none';
+}
 // Search
 
 $("#fsearch").on("keyup", function() {
