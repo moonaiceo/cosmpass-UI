@@ -1,7 +1,6 @@
 @import 'libs/fonts';
 @import 'variables/variables';
 
-@import 'base';
 @import 'animations/animations';
 
 @import 'blocks/application/header';
@@ -9,3 +8,5 @@
 @import 'blocks/application/promo';
 @import 'blocks/application/vaults';
 @import 'blocks/application/modal';
+
+@import 'base';

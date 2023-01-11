@@ -92,7 +92,44 @@
             <div class="vaults__cards">
 
                 <div class="vaults__cards__items">
-                    
+                    <template id="card-template">
+                        <div class="vaults__cards-item skeleton-card">
+                            <div class="vaults__cards-item__header">
+                                <div class="vaults__cards-item__header__icons">
+                                    <div class="vaults__cards-item__header__circle_one skeleton">
+                                    </div>
+        
+                                    <div class="vaults__cards-item__header__circle_two skeleton">
+                                    </div>
+                                </div>
+                      
+                                <div class="vaults__cards-item__header__text">
+                                    <div class="vaults__cards-item__header-title skeleton skeleton-text skeleton-text-header"></div>
+                                    <div class="vaults__cards-item__header-subtitle skeleton skeleton-text skeleton-text-subheader"></div>
+                                </div>
+                      
+                            </div>
+                      
+                            <div class="vaults__cards-item__body">
+                                <div class="vaults__cards-item__body-items">
+                                    <div class="vaults__cards-item__body-item">
+                                        <div class="vaults__cards-item__body-item__title skeleton skeleton-text"></div>
+                                    </div>
+                                    <div class="vaults__cards-item__body-item">
+                                        <div class="vaults__cards-item__body-item__title skeleton skeleton-text"></div>
+                                    </div>
+                      
+                                    <div class="vaults__cards-item__body-item">
+                                        <div class="vaults__cards-item__body-item__title skeleton skeleton-text"></div>
+                                    </div>
+                      
+                                    <div class="vaults__cards-item__body-item">
+                                        <div class="vaults__cards-item__body-item__title skeleton skeleton-text"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
                 </div>
             </div>
         </div>
@@ -262,7 +299,13 @@
         <div class="modal__mini__descr">Отлично! У вас успешно получилось пополнить</div>
     </div>
     </div>
-
+    <script>
+        const container = document.querySelector(".vaults__cards");
+        const cardTemplate = document.getElementById("card-template");
+        for (let i = 0; i < 3; i++) {
+            container.append(cardTemplate.content.cloneNode(true));
+        }
+    </script>
 </body>
 
     <script src="https://code.jquery.com/jquery-1.11.0.min.js"></script>

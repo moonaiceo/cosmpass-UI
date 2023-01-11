@@ -312,3 +312,46 @@ select {
 #user_value_locked, #myVaults{
   display: none;
 }
+
+
+.skeleton {
+  background: linear-gradient(-45deg, hsl(0, 0%, 78%), hsl(0, 0%, 37%));
+	background-size: 200% 200%;
+	animation: skeleton-loading 2s ease infinite;
+}
+
+@keyframes skeleton-loading {
+  0% {
+		background-position: 0% 50%;
+	}
+	50% {
+		background-position: 100% 50%;
+	}
+	100% {
+		background-position: 0% 50%;
+	}
+}
+
+.skeleton-card {
+  border:none !important;
+}
+
+.skeleton-text {
+  width: 100%;
+  height: 0.7rem;
+  margin-bottom: 0.5rem;
+  border-radius: 0.25rem;
+  background: linear-gradient(-45deg, hsl(0, 0%, 78%), hsl(0, 0%, 37%));
+	background-size: 300% 300%;
+	animation: skeleton-loading 2s ease infinite;
+}
+
+.skeleton-text-header {
+  width: 100px;
+  height: 0.5rem;
+}
+
+.skeleton-text-subheader {
+  width: 60px;
+  height: 0.5rem;
+}
