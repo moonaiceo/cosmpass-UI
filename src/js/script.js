@@ -1,7 +1,7 @@
 import { CosmWasmClient, SigningCosmWasmClient } from "@cosmjs/cosmwasm-stargate";
 import { tokens } from './constants.js';
 const btnWallet = document.querySelector(".button__wallet");
-const btnModalAction = document.querySelector(".button__action");
+const btnModalAction = document.querySelectorAll(".button__action");
 const modalActionLP = document.querySelector('.modal__action__lp');
 const vaultsCards = document.querySelector('.vaults__cards__items');
 const network = "testnet";
@@ -37,8 +37,235 @@ const contractAddress = {
 
 const get_count = async () => {
     const client_rpc = await CosmWasmClient.connect(rpcEndPoint[network]);
-    const getCount = await client_rpc.queryContractSmart(contractAddress[chainId['testnet']], {"query_all_pools": {}});
-    
+    const getCount = await client_rpc.queryContractSmart(contractAddress[chainId['testnet']], {"query_all_pools": {}})
+    const mock_data = {
+        "pools": [
+          {
+            "pool_id": "1",
+            "token_1": {
+              "symbol": "ATOM",
+              "denom": "ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2",
+              "icon_url": "https://app.osmosis.zone/_next/image?url=%2Ftokens%2Fatom.svg"
+            },
+            "token_2": {
+              "symbol": "OSMO",
+              "denom": "uosmo",
+              "icon_url": "https://app.osmosis.zone/_next/image?url=%2Ftokens%2Fosmo.svg"
+            },
+            "apr": {
+              "one_day": "9",
+              "one_week": "13",
+              "two_week": "22"
+            },
+            "apy": {
+              "one_day": "9.42",
+              "one_week": "13.88",
+              "two_week": "24.6"
+            },
+            "tvl": "0",
+            "converted_tvl": "0",
+            "reward_coin": [
+              "uosmo"
+            ]
+          },
+          {
+            "pool_id": "678",
+            "token_1": {
+              "symbol": "USDC",
+              "denom": "ibc/D189335C6E4A68B513C10AB227BF1C1D38C746766278BA3EEB4FB14124F1D858",
+              "icon_url": "https://app.osmosis.zone/_next/image?url=%2Ftokens%2Fusdc.svg"
+            },
+            "token_2": {
+              "symbol": "OSMO",
+              "denom": "uosmo",
+              "icon_url": "https://app.osmosis.zone/_next/image?url=%2Ftokens%2Fosmo.svg"
+            },
+            "apr": {
+              "one_day": "12",
+              "one_week": "16",
+              "two_week": "24"
+            },
+            "apy": {
+              "one_day": "12.75",
+              "one_week": "17.35",
+              "two_week": "27.11"
+            },
+            "tvl": "0",
+            "converted_tvl": "0",
+            "reward_coin": [
+              "uosmo"
+            ]
+          },
+          {
+            "pool_id": "704",
+            "token_1": {
+              "symbol": "WETH",
+              "denom": "ibc/EA1D43981D5C9A1C4AAEA9C23BB1D4FA126BA9BC7020A25E0AE4AA841EA25DC5",
+              "icon_url": "https://app.osmosis.zone/_next/image?url=%2Ftokens%2Fweth.svg"
+            },
+            "token_2": {
+              "symbol": "OSMO",
+              "denom": "uosmo",
+              "icon_url": "https://app.osmosis.zone/_next/image?url=%2Ftokens%2Fosmo.svg"
+            },
+            "apr": {
+              "one_day": "12",
+              "one_week": "19",
+              "two_week": "29"
+            },
+            "apy": {
+              "one_day": "12.75",
+              "one_week": "20.92",
+              "two_week": "33.63"
+            },
+            "tvl": "0",
+            "converted_tvl": "0",
+            "reward_coin": [
+              "uosmo"
+            ]
+          },
+          {
+            "pool_id": "712",
+            "token_1": {
+              "symbol": "WBTC",
+              "denom": "ibc/D1542AA8762DB13087D8364F3EA6509FD6F009A34F00426AF9E4F9FA85CBBF1F",
+              "icon_url": "https://app.osmosis.zone/_next/image?url=%2Ftokens%2Fwbtc.png"
+            },
+            "token_2": {
+              "symbol": "OSMO",
+              "denom": "uosmo",
+              "icon_url": "https://app.osmosis.zone/_next/image?url=%2Ftokens%2Fosmo.svg"
+            },
+            "apr": {
+              "one_day": "10",
+              "one_week": "15",
+              "two_week": "24"
+            },
+            "apy": {
+              "one_day": "10.52",
+              "one_week": "16.18",
+              "two_week": "27.11"
+            },
+            "tvl": "0",
+            "converted_tvl": "0",
+            "reward_coin": [
+              "uosmo"
+            ]
+          },
+          {
+            "pool_id": "674",
+            "token_1": {
+              "symbol": "DAI",
+              "denom": "ibc/0CD3A0285E1341859B5E86B6AB7682F023D03E97607CCC1DC95706411D866DF7",
+              "icon_url": "https://app.osmosis.zone/_next/image?url=%2Ftokens%2Fdai.svg"
+            },
+            "token_2": {
+              "symbol": "OSMO",
+              "denom": "uosmo",
+              "icon_url": "https://app.osmosis.zone/_next/image?url=%2Ftokens%2Fosmo.svg"
+            },
+            "apr": {
+              "one_day": "10",
+              "one_week": "15",
+              "two_week": "24"
+            },
+            "apy": {
+              "one_day": "10.52",
+              "one_week": "16.18",
+              "two_week": "27.11"
+            },
+            "tvl": "0",
+            "converted_tvl": "0",
+            "reward_coin": [
+              "uosmo"
+            ]
+          },
+          {
+            "pool_id": "722",
+            "token_1": {
+              "symbol": "EVMOS",
+              "denom": "ibc/6AE98883D4D5D5FF9E50D7130F1305DA2FFA0C652D1DD9C123657C6B4EB2DF8A",
+              "icon_url": "https://app.osmosis.zone/_next/image?url=%2Ftokens%2Fevmos.svg"
+            },
+            "token_2": {
+              "symbol": "OSMO",
+              "denom": "uosmo",
+              "icon_url": "https://app.osmosis.zone/_next/image?url=%2Ftokens%2Fosmo.svg"
+            },
+            "apr": {
+              "one_day": "29",
+              "one_week": "41",
+              "two_week": "82"
+            },
+            "apy": {
+              "one_day": "33.63",
+              "one_week": "50.65",
+              "two_week": "126.84"
+            },
+            "tvl": "0",
+            "converted_tvl": "0",
+            "reward_coin": [
+              "uosmo"
+            ]
+          },
+          {
+            "pool_id": "9",
+            "token_1": {
+              "symbol": "CRO",
+              "denom": "ibc/E6931F78057F7CC5DA0FD6CEF82FF39373A6E0452BF1FD76910B93292CF356C1",
+              "icon_url": "https://app.osmosis.zone/_next/image?url=%2Ftokens%2Fcro.png"
+            },
+            "token_2": {
+              "symbol": "OSMO",
+              "denom": "uosmo",
+              "icon_url": "https://app.osmosis.zone/_next/image?url=%2Ftokens%2Fosmo.svg"
+            },
+            "apr": {
+              "one_day": "8",
+              "one_week": "13",
+              "two_week": "22"
+            },
+            "apy": {
+              "one_day": "8.33",
+              "one_week": "13.88",
+              "two_week": "24.6"
+            },
+            "tvl": "0",
+            "converted_tvl": "0",
+            "reward_coin": [
+              "uosmo"
+            ]
+          },
+          {
+            "pool_id": "497",
+            "token_1": {
+              "symbol": "JUNO",
+              "denom": "ibc/46B44899322F3CD854D2D46DEEF881958467CDD4B3B10086DA49296BBED94BED",
+              "icon_url": "https://app.osmosis.zone/_next/image?url=%2Ftokens%2Fjuno.svg"
+            },
+            "token_2": {
+              "symbol": "OSMO",
+              "denom": "uosmo",
+              "icon_url": "https://app.osmosis.zone/_next/image?url=%2Ftokens%2Fosmo.svg"
+            },
+            "apr": {
+              "one_day": "19",
+              "one_week": "28",
+              "two_week": "40"
+            },
+            "apy": {
+              "one_day": "20.92",
+              "one_week": "32.3",
+              "two_week": "49.15"
+            },
+            "tvl": "0",
+            "converted_tvl": "0",
+            "reward_coin": [
+              "uosmo"
+            ]
+          }
+        ]
+    }
     return getCount;
 };
 
@@ -75,22 +302,6 @@ async function get_total_value_locked(){
 
 }
 
-async function get_user_usd_value_for_pool(id){
-  const url = `${lcdEndPoint[network]}/osmosis/lockup/v1beta1/account_locked_longer_duration/${account.address}`;
-  let total_usd_value = 0;
-
-  const data = await $.get(url);
-
-  for (const elem of data['locks']) {
-    let coin = elem['coins'][0];
-    const pool_id = coin['denom'].split("/").pop();
-    if (pool_id === id) {
-      let usd_value = await calculate_usd_value(pool_id, coin['amount']);
-      total_usd_value += usd_value;
-    }
-  }
-  return total_usd_value;
-}
 
 
 
@@ -142,13 +353,37 @@ async function setBalances(denom1, denom2, denom3){
   return [balance1, balance2, balance3];
 }
 
+async function getBalancesForSC(denom1, denom2, address){
+  const response = await $.get(`${lcdEndPoint[network]}cosmos/bank/v1beta1/balances/${address}`);
+  const balance1 = getBalance(response, denom1);
+  const balance2 = getBalance(response, denom2);
+  return [balance1, balance2];
+}
+
+async function getAutoCompounderAddress(pool_id){
+  const client_rpc = await CosmWasmClient.connect(rpcEndPoint[network]);
+  // const userEntries = await client_rpc.queryContractSmart(contractAddress[chainId['testnet']], {"query_user_entries": {"user": account.address}});
+  // let autoCompounderAddress = userEntries['entries'].find((e) => e.pool_id === pool_id)['pool_addr'];
+  let autoCompounderAddress = "osmo";
+  // console.log(userEntries);
+  return autoCompounderAddress;
+  
+}
+
 get_count().then(async (value) => {
+  sort();
   if (localStorage.getItem("isLoggedIn")){
     await connectKeplr();
   }
   console.log(value);
   await createVaultsList(value.pools);
-  await get_total_value_locked();
+
+  try{
+    await get_total_value_locked();
+  } catch (e){
+    console.log(e)
+  }
+
   if (isUserConnected === false){
     hide_user_related_elements();
   }
@@ -157,30 +392,48 @@ get_count().then(async (value) => {
   }
   $('.vaults__cards-item').each(function(i) {
     $(this).on('click', async function() {
-      console.log(this);
-      let gamm = `gamm/pool/${value.pools[i].pool_id}`;
+      let pool = value.pools[i];
+      let gamm = `gamm/pool/${pool.pool_id}`;
       if (isUserConnected) {
-        let balances = await setBalances(value.pools[i].token_1.denom, value.pools[i].token_2.denom, gamm);
-        $('.certain_balance')[0].innerHTML = balances[0];
-        $('#coinBalanceOne').attr("value", balances[0]);
-        $('.certain_balance')[1].innerHTML = balances[1];
-        $('#coinBalanceTwo').attr("value", balances[1]);
-        console.log(balances);
-        $('.certain_balance')[2].innerHTML = balances[2];
-        $('#coinBalanceThree').attr("value", balances[2]);
+        try {
+          // query storage SC to get AC address of this user for clicked vault's pool_id
+          let autoCompounderAddress = await getAutoCompounderAddress(pool.pool_id);
+          $('input[name="autoCompounderAddress"]').attr("value", autoCompounderAddress);
+
+          // getting balances for depositing funds
+          let DepositBalances = await setBalances(pool.token_1.denom, pool.token_2.denom, gamm);
+          $('.certain_balance')[0].innerHTML = DepositBalances[0];
+          $('#coinBalanceOne').attr("value", DepositBalances[0]);
+          $('.certain_balance')[1].innerHTML = DepositBalances[1];
+          $('#coinBalanceTwo').attr("value", DepositBalances[1]);
+          $('.certain_balance')[2].innerHTML = DepositBalances[2];
+          $('#coinBalanceThree').attr("value", DepositBalances[2]);
+
+          // getting balances for withdraw funds
+          let WithdrawBalances = await getBalancesForSC(pool.token_1.denom, pool.token_2.denom, autoCompounderAddress);
+          $('.certain_balance')[3].innerHTML = WithdrawBalances[0];
+          $('#WithdrawCoinBalanceOne').attr("value", WithdrawBalances[0]);
+          $('.certain_balance')[4].innerHTML = WithdrawBalances[1];
+          $('#WithdrawCoinBalanceTwo').attr("value", WithdrawBalances[1]);
+        } catch (e) {
+          console.log(e)
+        }
       }
-      createJson(); 
+      // createJson(); 
       $('.modal__header__title').text($('.vaults__cards-item__header-title').eq(i).text());
       $('.modal__header__subtitle').text($('.vaults__cards-item__header-subtitle').eq(i).text());
       $('#coinLabelOne').text($('.vaults__cards-item__header-title').eq(i).text().trim().split('-')[0]);
       $('#coinLabelTwo').text($('.vaults__cards-item__header-title').eq(i).text().trim().split('-')[1]);
       $('#coinLabelThree').text(gamm);
-      $('#depositTokens').text(value.pools[i].token_1.symbol + " + " + value.pools[i].token_2.symbol);
-      $('#depositLP').text(value.pools[i].pool_id + " LP token");
-      $('input[name="coin one"]').attr("address", value.pools[i].token_1.denom);
-      $('input[name="coin two"]').attr("address", value.pools[i].token_2.denom);
-      $('input[name="coin three"]').attr("address", gamm);
+      $('#depositTokens').text(pool.token_1.symbol + " + " + pool.token_2.symbol);
+      $('#depositLP').text(pool.pool_id + " LP token");
+      $('input[name="coin one"]').attr("address", pool.token_1.denom)
+      $('input[name="coin two"]').attr("address", pool.token_2.denom)
+      $('input[name="coin three"]').attr("address", gamm)
       
+      $('input[name="withdraw_coin_1]').attr("address", pool.token_1.denom)
+      $('input[name="withdraw_coin_2"]').attr("address", pool.token_2.denom)
+
       $('.modal__header__icon').each(function(j) {
         $(this).attr("src", $('.vaults__cards-item__header__icons').eq(i).find('.vaults__cards-item__header__icon').eq(j).attr("src"));
       });
@@ -194,7 +447,6 @@ get_count().then(async (value) => {
 
     });
   }); 
-  sort();
 
   // Data attributes
 
@@ -247,6 +499,23 @@ get_count().then(async (value) => {
   });
 });
 
+async function get_user_usd_value_for_pool(id, address){
+  const url = `${lcdEndPoint[network]}/osmosis/lockup/v1beta1/account_locked_longer_duration/${account.address}`
+  let total_usd_value = 0;
+
+  const data = await $.get(url);
+
+  for (const elem of data['locks']) {
+    let coin = elem['coins'][0];
+    const pool_id = coin['denom'].split("/").pop();
+    if (pool_id === id) {
+      let usd_value = await calculate_usd_value(pool_id, coin['amount']);
+      total_usd_value += usd_value;
+    }
+  }
+  return total_usd_value;
+}
+
 async function getBalancesForVaults(vaults){
   var requests = [];
 
@@ -273,7 +542,7 @@ const createVaultsList = async (vaults) => {
       console.log(balance);
   }
 
-  await getBalancesForVaults(vaults);
+  // await getBalancesForVaults(vaults);
  
   vaultsCards.innerHTML = "";
 
@@ -285,20 +554,15 @@ const createVaultsList = async (vaults) => {
               <div class="vaults__cards-item__header__circle_one">
                   <img src="${vault.token_1.icon_url}" alt="coin icon" class="vaults__cards-item__header__icon">
               </div>
-
               <div class="vaults__cards-item__header__circle_two">
                   <img src="${vault.token_2.icon_url}" alt="coin icon" class="vaults__cards-item__header__icon">
               </div>
           </div>
-
           <div class="vaults__cards-item__header__text">
               <div class="vaults__cards-item__header-title" data-name>${vault.token_1.symbol} - ${vault.token_2.symbol}</div>
               <div class="vaults__cards-item__header-subtitle">Farm: Osmosis</div>
           </div>
-
       </div>
-
-
       <div class="vaults__cards-item__body">
           <div class="vaults__cards-item__body-items">
               <div class="vaults__cards-item__body-item balance">
@@ -311,12 +575,10 @@ const createVaultsList = async (vaults) => {
                   <div class="vaults__cards-item__body-item__title">TVL</div>
                   <div class="vaults__cards-item__body-item__descr" data-tvl>${vault.tvl} USD</div>
               </div>
-
               <div class="vaults__cards-item__body-item">
                   <div class="vaults__cards-item__body-item__title">APY</div>
                   <div class="vaults__cards-item__body-item__descr label-apy" data-apy><span class="span-apy">${vault.apr.two_week}%</span>  ${vault.apy.two_week}%</div>
               </div>
-
               <div class="vaults__cards-item__body-item">
                   <div class="vaults__cards-item__body-item__title">Daily</div>
                   <div class="vaults__cards-item__body-item__descr" data-daily>${vault.apy.one_day}%</div>
@@ -329,13 +591,20 @@ const createVaultsList = async (vaults) => {
 };
 
 
-btnModalAction.addEventListener("click", function (elem){
- deposit_funds(offlineSigner, account, this);
-});
-
-$('#btnWithdraw').on('click', function (){
-  withdraw_funds(offlineSigner, account, this);
-});
+btnModalAction.forEach((btn) => {
+  btn.addEventListener("click", function (elem){
+    switch (this.textContent) {
+      case "Deposit":
+        deposit_funds(offlineSigner, account, this);
+        break;
+      case "Withdraw":
+        withdraw_funds(offlineSigner, account, this);
+        break;
+      default:
+        console.log(`There is no case for such a button ${this.textContent}`);
+    }
+  });
+})
 
 
 btnWallet.addEventListener("click", () => connectKeplr());
@@ -381,22 +650,90 @@ function createMsgSendJson(denom, value) {
 
 
 async function withdraw_funds(offlineSigner, account, element){
+  let input1 = element.parentNode.querySelector('input[name="withdraw_coin_1"]');
+  let input2 = element.parentNode.querySelector('input[name="withdraw_coin_2"]');
+  let denom1 = input1.getAttribute("address");
+  let denom2 = input2.getAttribute("address");
+  console.log(input2, denom2)
   const stargateClient = await SigningCosmWasmClient.connectWithSigner(
     rpcEndPoint[network],
     offlineSigner,
-    {gasPrice: "0.002uosmo"}
+    { gasPrice: "0.004uosmo"}
   ); 
 
   let withdrawMsg = {
     withdraw_tokens: {
       to_address: account.address,
-      tokens: [{denom: "uosmo", amount: "100000"}]
+      tokens: [
+        // createMsgSendJson(denom1, input1.value),
+        createMsgSendJson(denom2, input2.value)
+      ]
       }
     };
  
   try {
     showModalLoadingStatus();
     let transaction = await stargateClient.execute(account.address, "osmo1e4d8k78fvdxqtt8uut8tkw3r6540wrtx6pwn90yp3ughpezzfy9s6t4tts", withdrawMsg, "auto");
+    console.log(transaction);
+    statusModalShow("success");
+  } catch (e){
+    statusModalShow("error");
+    console.log(e);
+  }
+  
+}
+
+async function join_pool(offlineSigner, account, element){
+  // (Amount of funds deposited / Total value of all funds in the pool) * Total number of LP tokens in the pool.
+  const stargateClient = await SigningCosmWasmClient.connectWithSigner(
+    rpcEndPoint[network],
+    offlineSigner,
+    { gasPrice: "0.004uosmo"}
+  ); 
+
+  let withdrawMsg = {
+    join_pool: {
+      pool_id: 1,
+      amount: "1233213213",
+      token_in_maxs: [{denom: "ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2", amount: "1000002"}, {denom: "uosmo", amount: "68298"}]
+    }
+    };
+ 
+  try {
+    showModalLoadingStatus();
+    let transaction = await stargateClient.execute(account.address, "osmo1e4d8k78fvdxqtt8uut8tkw3r6540wrtx6pwn90yp3ughpezzfy9s6t4tts", withdrawMsg, "auto");
+    console.log(transaction);
+    statusModalShow("success");
+  } catch (e){
+    statusModalShow("error");
+    console.log(e);
+  }
+  
+}
+
+
+async function add_entry(offlineSigner, account, element){
+  let input1 = element.parentNode.querySelector('input[name="withdraw_coin_1"]');
+  let input2 = element.parentNode.querySelector('input[name="withdraw_coin_2"]');
+  let denom1 = input1.getAttribute("address");
+  let denom2 = input2.getAttribute("address");
+  const stargateClient = await SigningCosmWasmClient.connectWithSigner(
+    rpcEndPoint[network],
+    offlineSigner,
+    { gasPrice: "0.004uosmo"}
+  ); 
+
+  let withdrawMsg = {
+    new_entry: {
+      user:"osmo18l247apx8uwhg6kzxyuu2nre6n5zkpfate55pf", 
+      pool_id: "101", 
+      amount: "45000", 
+      pool_addr:"osmo101"}
+    }
+ 
+  try {
+    showModalLoadingStatus()
+    let transaction = await stargateClient.execute(account.address, contractAddress[chainId['testnet']], withdrawMsg, "auto")
     console.log(transaction);
     statusModalShow("success");
   } catch (e){
@@ -414,7 +751,6 @@ async function deposit_funds(offlineSigner, account, element) {
   let denom1 = input1.getAttribute("address");
   let denom2 = input2.getAttribute("address");
   let denom3 = input3.getAttribute("address");
-  const withdrawLPInput = document.querySelector('input[name="withdraw_lp"]').value;
   let msgJson = {};
   const stargateClient = await SigningCosmWasmClient.connectWithSigner(
     rpcEndPoint[network],
@@ -556,7 +892,6 @@ async function createJson(type_of_msg) {
   // const depositFirstTokenInput = document.querySelector('input[name="pwd"]');
   // const depositSecondTokenInput = document.querySelector('input[name="pwd"]');
   // const depositLPInput = document.querySelector('input[name="pwd"]');
-  const withdrawLPInput = document.querySelector('input[name="withdraw_lp"]').value;
   // const withdrawTokenInput = document.querySelector('input[name="pwd"]');
 
   switch(type_of_msg) {
@@ -675,11 +1010,11 @@ $('.modal__actions').on('click', ':not(.modal__actions-item_active)', function()
       $('.modal__action__withdraw-label__unbond')
         .addClass('modal__action__withdraw-label__unbond-lock')
         .removeClass('modal__action__withdraw-label__unbond-check');
-      $('.modal__action__withdraw-input')
-        .removeClass('modal__action__withdraw-input_active').find('input').prop('disabled', true);
+      // $('.modal__action__withdraw-input')
+      //   .removeClass('modal__action__withdraw-input_active').find('input').prop('disabled', true);
     } else {
-      $('.button__action')
-        .removeClass('button__action_active').prop('disabled', true);
+      // $('.button__action')
+      //   .removeClass('button__action_active').prop('disabled', true);
     }
 });
 

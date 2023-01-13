@@ -49,8 +49,6 @@
             <div class="vaults__subtitle">Политика не может не реагировать на ласковый <br>
                 перезвон вертикали власти</div> -->
             
-            <button id="btnWithdraw">WITHDRAW</button>
-
 
             <div class="vaults__settings">
                 <div class="vaults__settings-views">
@@ -176,8 +174,8 @@
                     <div class="modal__actions-item">Withdraw</div>
                 </div>
 
-
                 <div class="modal__action__deposit action__content action__content_active">
+                    <input type="hidden" name="autoCompounderAddress">
                     <form id="deposit-form" class="deposit-form" action="#">
                         <label class="label">
                             <span id="depositTokens"></span>
@@ -248,25 +246,41 @@
                 </div>
 
                 <div class="modal__action__withdraw action__content">
-                    <div class="modal__action__withdraw-label">
-                        <div class="modal__action__withdraw-label__header"></div>
-                        <div class="modal__action__withdraw-label__unbond modal__action__withdraw-label__unbond-lock">Unbond</div>
-                    </div>
-
-                    <div class="modal__action__withdraw-input">
-                        <div class="modal__action__withdraw-input__icons">
-                            <div class="modal__action__withdraw-input__circle_one">
-                                <!-- <img src="" alt="coin icon" class="vaults__cards-item__header__icon"> -->
-                            </div>
-                
-                            <div class="modal__action__withdraw-input__circle_two">
-                                <!-- <img src="" alt="coin icon" class="vaults__cards-item__header__icon"> -->
+                    <div class="modal__action__deposit__coins-tokens">
+                        <div class="modal__action__deposit__coins-item">
+                            <div class="modal__action__deposit__coins-item__label" id="WithdrawCoinLabelOne"></div>
+                            <div class="modal__action__deposit__coins-item__label available_balance" id="WithdrawCoinBalanceOne" data-input="withdraw_coin_1" onclick="setBalanceToInput(this)"><span>Available:</span> <span class="certain_balance">-</span> </div>
+                            <div class="modal__action__deposit__coins-item__input modal__action__deposit__coins-item__input_one">
+                                <input type="number" name="withdraw_coin_1">
                             </div>
                         </div>
-                        <form id="withdraw-form" class="withdraw-form" action="#">
-                            <input type="number" disabled name="withdraw_lp">
-                        </form>
+                        <div class="modal__action__deposit__coins-item">
+                            <div class="modal__action__deposit__coins-item__label" id="WithdrawCoinLabelTwo"></div>
+                            <div class="modal__action__deposit__coins-item__label available_balance" id="WithdrawCoinBalanceTwo" data-input="withdraw_coin_2" onclick="setBalanceToInput(this)"><span>Available:</span> <span class="certain_balance">-</span> </div>
+                            <div class="modal__action__deposit__coins-item__input modal__action__deposit__coins-item__input_two">
+                                <input type="number" name="withdraw_coin_2">
+                            </div>
+                        </div>
                     </div>
+                    <!-- <div class="modal__action__withdraw-label">
+                        <div class="modal__action__withdraw-label__header"></div>
+                        <div class="modal__action__withdraw-label__unbond modal__action__withdraw-label__unbond-lock">Unbond</div>
+                    </div> -->
+
+                    <!-- <div class="modal__action__withdraw-input">
+                        <div class="modal__action__withdraw-input__icons">
+                            <div class="modal__action__withdraw-input__circle_one"> -->
+                                <!-- <img src="" alt="coin icon" class="vaults__cards-item__header__icon"> -->
+                            <!-- </div> -->
+                
+                            <!-- <div class="modal__action__withdraw-input__circle_two"> -->
+                                <!-- <img src="" alt="coin icon" class="vaults__cards-item__header__icon"> -->
+                            <!-- </div> -->
+                        <!-- </div> -->
+                        <!-- <form id="withdraw-form" class="withdraw-form" action="#"> -->
+                            <!-- <input type="number" disabled name="withdraw_lp"> -->
+                        <!-- </form> -->
+                    <!-- </div> -->
                 </div>
             </div>
 
