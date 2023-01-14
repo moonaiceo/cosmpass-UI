@@ -480,11 +480,30 @@ get_count().then(async (value) => {
 
   // Sort
 
-  $('#sort').find('.select-items div').on('click', function() {
-    if ($(this).data("sort-type") !== "default") {
-      $(this).on('click', sortCards($(this).data("sort-type")));
+  $('.vaults__settings__sorting-sort__desc').on('click', function() {
+    $(this)
+      .toggleClass('vaults__settings__sorting-sort__desc_active')
+    if ($(this).hasClass('vaults__settings__sorting-sort__desc_active')) {
+      console.log($('.vaults__settings__sorting-sort__icon'));
+      $('.vaults__settings__sorting-sort__icon').attr("src", "../icons/application/order.svg").css("transform", "rotate(0deg)");
     } else {
-      $(this).on('click', sortCards("data-name"));
+      $('.vaults__settings__sorting-sort__icon').attr("src", "../icons/application/order.svg").css("transform", "rotate(180deg)");
+    }
+  });
+
+  $('#sort').find('.select-items div').on('click', function() {
+    if ($('.vaults__settings__sorting-sort__desc').hasClass("vaults__settings__sorting-sort__desc_active")) {
+      if ($(this).data("sort-type") !== "default") {
+        $(this).on('click', sortCardsDesc($(this).data("sort-type")));
+      } else {
+        $(this).on('click', sortCardsAsc("data-name"));
+      }
+    } else {
+      if ($(this).data("sort-type") !== "default") {
+        $(this).on('click', sortCardsAsc($(this).data("sort-type")));
+      } else {
+        $(this).on('click', sortCardsDesc("data-name"));
+      }
     }
   });
 
@@ -1180,7 +1199,9 @@ function closeAllSelect(elmnt) {
 then close all select boxes: */
 document.addEventListener("click", closeAllSelect);
 
-function sortCards(sortType) {
+// Descending order sort
+
+function sortCardsDesc(sortType) {
   let gridItems = document.querySelector('.vaults__cards__items');
 
   for (let i = 0; i < gridItems.children.length; i++) {
@@ -1195,6 +1216,25 @@ function sortCards(sortType) {
     hide_none_user_vaults();
   }
 }
+
+// Ascending Order Sort
+
+function sortCardsAsc(sortType) {
+  let gridItems = document.querySelector('.vaults__cards__items');
+
+  for (let i = 0; i < gridItems.children.length; i++) {
+    for (let j = i; j < gridItems.children.length; j++) {
+      if (gridItems.children[i].querySelector('[' + sortType + ']').getAttribute(sortType) > gridItems.children[j].querySelector('[' + sortType + ']').getAttribute(sortType)) {
+        let replacedNode = gridItems.replaceChild(gridItems.children[j], gridItems.children[i]);
+        insertAfter(replacedNode, gridItems.children[i]);
+      }
+    }
+  }
+  if ($('#myVaults').hasClass("vaults__settings-views__view_active")){
+    hide_none_user_vaults();
+  }
+}
+
 
 function insertAfter(elem, refElem) {
   return refElem.parentNode.insertBefore(elem, refElem.nextSibling);

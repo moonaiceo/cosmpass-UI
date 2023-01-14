@@ -84,9 +84,22 @@
                 color: #8C8B8B;
             }
             &-sort {
-                margin-right: 32px;
+                position: relative;
+                margin-right: 40px;
                 display: flex;
                 align-items: center;
+                &__desc {
+                    position: absolute;
+                    right: -30px;
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                    cursor: pointer;
+                }
+                &__icon {
+                    height: 24px;
+                    width: 24px;
+                }
             }
             &-farms {
                 display: flex;

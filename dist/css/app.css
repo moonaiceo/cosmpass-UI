@@ -172,9 +172,22 @@
   color: #8C8B8B;
 }
 .vaults__settings__sorting-sort {
-  margin-right: 32px;
+  position: relative;
+  margin-right: 40px;
   display: flex;
   align-items: center;
+}
+.vaults__settings__sorting-sort__desc {
+  position: absolute;
+  right: -30px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+}
+.vaults__settings__sorting-sort__icon {
+  height: 24px;
+  width: 24px;
 }
 .vaults__settings__sorting-farms {
   display: flex;
