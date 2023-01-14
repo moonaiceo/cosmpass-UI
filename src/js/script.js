@@ -37,7 +37,7 @@ const contractAddress = {
 
 const get_count = async () => {
     const client_rpc = await CosmWasmClient.connect(rpcEndPoint[network]);
-    const getCount = await client_rpc.queryContractSmart(contractAddress[chainId['testnet']], {"query_all_pools": {}})
+    const getCount = await client_rpc.queryContractSmart(contractAddress[chainId['testnet']], {"query_all_pools": {}});
     const mock_data = {
         "pools": [
           {
@@ -265,7 +265,7 @@ const get_count = async () => {
             ]
           }
         ]
-    }
+    };
     return getCount;
 };
 
@@ -381,7 +381,7 @@ get_count().then(async (value) => {
   try{
     await get_total_value_locked();
   } catch (e){
-    console.log(e)
+    console.log(e);
   }
 
   if (isUserConnected === false){
@@ -416,7 +416,7 @@ get_count().then(async (value) => {
           $('.certain_balance')[4].innerHTML = WithdrawBalances[1];
           $('#WithdrawCoinBalanceTwo').attr("value", WithdrawBalances[1]);
         } catch (e) {
-          console.log(e)
+          console.log(e);
         }
       }
       // createJson(); 
@@ -425,14 +425,16 @@ get_count().then(async (value) => {
       $('#coinLabelOne').text($('.vaults__cards-item__header-title').eq(i).text().trim().split('-')[0]);
       $('#coinLabelTwo').text($('.vaults__cards-item__header-title').eq(i).text().trim().split('-')[1]);
       $('#coinLabelThree').text(gamm);
+      $('#WithdrawCoinLabelOne').text($('.vaults__cards-item__header-title').eq(i).text().trim().split('-')[0]);
+      $('#WithdrawCoinLabelTwo').text($('.vaults__cards-item__header-title').eq(i).text().trim().split('-')[1]);
       $('#depositTokens').text(pool.token_1.symbol + " + " + pool.token_2.symbol);
       $('#depositLP').text(pool.pool_id + " LP token");
-      $('input[name="coin one"]').attr("address", pool.token_1.denom)
-      $('input[name="coin two"]').attr("address", pool.token_2.denom)
-      $('input[name="coin three"]').attr("address", gamm)
+      $('input[name="coin one"]').attr("address", pool.token_1.denom);
+      $('input[name="coin two"]').attr("address", pool.token_2.denom);
+      $('input[name="coin three"]').attr("address", gamm);
       
-      $('input[name="withdraw_coin_1]').attr("address", pool.token_1.denom)
-      $('input[name="withdraw_coin_2"]').attr("address", pool.token_2.denom)
+      $('input[name="withdraw_coin_1]').attr("address", pool.token_1.denom);
+      $('input[name="withdraw_coin_2"]').attr("address", pool.token_2.denom);
 
       $('.modal__header__icon').each(function(j) {
         $(this).attr("src", $('.vaults__cards-item__header__icons').eq(i).find('.vaults__cards-item__header__icon').eq(j).attr("src"));
@@ -441,6 +443,7 @@ get_count().then(async (value) => {
       $('.modal__descr-item__descr').each(function(j) {
         $(this).html($('.vaults__cards-item').eq(i).find('.vaults__cards-item__body-item__descr').eq(j).html());
       });
+
       $('.overlay, .modal').fadeIn('slow');
       $("html").css("overflow", "hidden");
       showTokensInput();
@@ -500,7 +503,7 @@ get_count().then(async (value) => {
 });
 
 async function get_user_usd_value_for_pool(id, address){
-  const url = `${lcdEndPoint[network]}/osmosis/lockup/v1beta1/account_locked_longer_duration/${account.address}`
+  const url = `${lcdEndPoint[network]}/osmosis/lockup/v1beta1/account_locked_longer_duration/${account.address}`;
   let total_usd_value = 0;
 
   const data = await $.get(url);
@@ -604,7 +607,7 @@ btnModalAction.forEach((btn) => {
         console.log(`There is no case for such a button ${this.textContent}`);
     }
   });
-})
+});
 
 
 btnWallet.addEventListener("click", () => connectKeplr());
@@ -654,7 +657,7 @@ async function withdraw_funds(offlineSigner, account, element){
   let input2 = element.parentNode.querySelector('input[name="withdraw_coin_2"]');
   let denom1 = input1.getAttribute("address");
   let denom2 = input2.getAttribute("address");
-  console.log(input2, denom2)
+  console.log(input2, denom2);
   const stargateClient = await SigningCosmWasmClient.connectWithSigner(
     rpcEndPoint[network],
     offlineSigner,
@@ -729,11 +732,11 @@ async function add_entry(offlineSigner, account, element){
       pool_id: "101", 
       amount: "45000", 
       pool_addr:"osmo101"}
-    }
+    };
  
   try {
-    showModalLoadingStatus()
-    let transaction = await stargateClient.execute(account.address, contractAddress[chainId['testnet']], withdrawMsg, "auto")
+    showModalLoadingStatus();;
+    let transaction = await stargateClient.execute(account.address, contractAddress[chainId['testnet']], withdrawMsg, "auto");
     console.log(transaction);
     statusModalShow("success");
   } catch (e){
@@ -959,8 +962,6 @@ async function createJson(type_of_msg) {
       break;
   }
 }
-
-// Skeleton loading
 
 
 // Modal
