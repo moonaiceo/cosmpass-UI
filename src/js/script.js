@@ -436,6 +436,11 @@ get_count().then(async (value) => {
       $('input[name="withdraw_coin_1]').attr("address", pool.token_1.denom);
       $('input[name="withdraw_coin_2"]').attr("address", pool.token_2.denom);
 
+      $('.modal__action__deposit__coins-item__input-img_WOne').attr("src", pool.token_1.icon_url);
+      $('.modal__action__deposit__coins-item__input-img_WTwo').attr("src", pool.token_2.icon_url);
+      $('.modal__action__deposit__coins-item__input-img_DOne').attr("src", pool.token_1.icon_url);
+      $('.modal__action__deposit__coins-item__input-img_DTwo').attr("src", pool.token_2.icon_url);
+
       $('.modal__header__icon').each(function(j) {
         $(this).attr("src", $('.vaults__cards-item__header__icons').eq(i).find('.vaults__cards-item__header__icon').eq(j).attr("src"));
       });

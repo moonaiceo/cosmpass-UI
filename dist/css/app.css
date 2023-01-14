@@ -551,6 +551,34 @@
   padding: 10px 8px;
   width: 256px;
 }
+.modal__action__deposit__coins-item__input-circle_one {
+  position: absolute;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 20px;
+  height: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: #4A4A4A;
+  border-radius: 100px;
+}
+.modal__action__deposit__coins-item__input-circle_two {
+  position: absolute;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 20px;
+  height: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: #A4A4A4;
+  border-radius: 100px;
+}
+.modal__action__deposit__coins-item__input-img {
+  width: 14px;
+  height: 14px;
+}
 .modal__action__deposit__coins-item__input input {
   font-weight: 510;
   font-size: 14px;
@@ -562,41 +590,8 @@
   background: transparent;
   width: calc(100% - 48px);
 }
-.modal__action__deposit__coins-item__input_one:after {
-  content: "";
-  position: absolute;
-  display: block;
-  width: 20px;
-  height: 20px;
-  top: 50%;
-  transform: translateY(-50%);
-  background: #4A4A4A;
-  border-radius: 100px;
-}
-.modal__action__deposit__coins-item__input_two:after {
-  content: "";
-  position: absolute;
-  display: block;
-  width: 20px;
-  height: 20px;
-  top: 50%;
-  transform: translateY(-50%);
-  background: #A4A4A4;
-  border-radius: 100px;
-}
 .modal__action__deposit__coins-item__input_three {
   width: 536px;
-}
-.modal__action__deposit__coins-item__input_three:after {
-  content: "";
-  position: absolute;
-  display: block;
-  width: 20px;
-  height: 20px;
-  top: 50%;
-  transform: translateY(-50%);
-  background: #4A4A4A;
-  border-radius: 100px;
 }
 .modal__actions {
   display: flex;
