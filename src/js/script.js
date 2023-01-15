@@ -683,6 +683,10 @@ async function withdraw_funds(offlineSigner, account, element){
   
 }
 
+async function estimate_amount_of_lp(){
+  
+}
+
 async function join_pool(offlineSigner, account, element){
   // (Amount of funds deposited / Total value of all funds in the pool) * Total number of LP tokens in the pool.
   const stargateClient = await SigningCosmWasmClient.connectWithSigner(
