@@ -482,7 +482,7 @@ get_count().then(async (value) => {
 
   $('.vaults__settings__sorting-sort__desc').on('click', function() {
     $(this)
-      .toggleClass('vaults__settings__sorting-sort__desc_active')
+      .toggleClass('vaults__settings__sorting-sort__desc_active');
     if ($(this).hasClass('vaults__settings__sorting-sort__desc_active')) {
       console.log($('.vaults__settings__sorting-sort__icon'));
       $('.vaults__settings__sorting-sort__icon').attr("src", "../icons/application/order.svg").css("transform", "rotate(0deg)");
@@ -896,14 +896,6 @@ $('.modal__action').on('click', 'li:not(.catalog__tab_active)', function() {
 $('.modal__close').on('click', function() {
   $('.overlay, .modal').fadeOut('slow');
 });
-$('.vaults__cards-item').each(function(i) {
-  $(this).on('click', function() {
-    createJson(); 
-    $('.modal__title').text($('.vaults__cards-item__header-title').eq(i).text());
-    // $('.modal__subtitle').text($('.vaults__cards-item__header-subtitle').eq(i).text());
-    $('.overlay, .modal').fadeIn('slow');
-  });
-});
 
 
 
@@ -1203,10 +1195,11 @@ document.addEventListener("click", closeAllSelect);
 
 function sortCardsDesc(sortType) {
   let gridItems = document.querySelector('.vaults__cards__items');
+  console.log(gridItems);
 
   for (let i = 0; i < gridItems.children.length; i++) {
     for (let j = i; j < gridItems.children.length; j++) {
-      if (gridItems.children[i].querySelector('[' + sortType + ']').getAttribute(sortType) < gridItems.children[j].querySelector('[' + sortType + ']').getAttribute(sortType)) {
+      if (parseFloat(gridItems.children[i].querySelector('[' + sortType + ']').getAttribute(sortType), 10) < parseFloat(gridItems.children[j].querySelector('[' + sortType + ']').getAttribute(sortType), 10)) {
         let replacedNode = gridItems.replaceChild(gridItems.children[j], gridItems.children[i]);
         insertAfter(replacedNode, gridItems.children[i]);
       }
@@ -1224,7 +1217,7 @@ function sortCardsAsc(sortType) {
 
   for (let i = 0; i < gridItems.children.length; i++) {
     for (let j = i; j < gridItems.children.length; j++) {
-      if (gridItems.children[i].querySelector('[' + sortType + ']').getAttribute(sortType) > gridItems.children[j].querySelector('[' + sortType + ']').getAttribute(sortType)) {
+      if (parseFloat(gridItems.children[i].querySelector('[' + sortType + ']').getAttribute(sortType), 10) > parseFloat(gridItems.children[j].querySelector('[' + sortType + ']').getAttribute(sortType), 10)) {
         let replacedNode = gridItems.replaceChild(gridItems.children[j], gridItems.children[i]);
         insertAfter(replacedNode, gridItems.children[i]);
       }
