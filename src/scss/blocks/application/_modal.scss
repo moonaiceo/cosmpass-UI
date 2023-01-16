@@ -192,6 +192,36 @@
                         border-radius: 16px;
                         padding: 10px 8px;
                         width: 256px;
+                        &-circle {
+                            &_one {
+                                position: absolute;
+                                display: flex;
+                                justify-content: center;
+                                align-items: center;
+                                width: 20px;
+                                height: 20px;
+                                top: 50%;
+                                transform: translateY(-50%);
+                                background: #4A4A4A;
+                                border-radius: 100px;
+                            }
+                            &_two {
+                                position: absolute;
+                                display: flex;
+                                justify-content: center;
+                                align-items: center;
+                                width: 20px;
+                                height: 20px;
+                                top: 50%;
+                                transform: translateY(-50%);
+                                background: #A4A4A4;
+                                border-radius: 100px;
+                            }
+                        }
+                        &-img {
+                            width: 14px;
+                            height: 14px;
+                        }
                         input {
                             font-weight: 510;
                             font-size: 14px;
@@ -203,45 +233,8 @@
                             background: transparent;
                             width: calc(100% - 48px);
                         }
-                        &_one {
-                            &:after {
-                                content: '';
-                                position: absolute;
-                                display: block;
-                                width: 20px;
-                                height: 20px;
-                                top: 50%;
-                                transform: translateY(-50%);
-                                background: #4A4A4A;
-                                border-radius: 100px;
-                            }
-                        }
-                        &_two {
-                            &:after {
-                                content: '';
-                                position: absolute;
-                                display: block;
-                                width: 20px;
-                                height: 20px;
-                                top: 50%;
-                                transform: translateY(-50%);
-                                background: #A4A4A4;
-                                border-radius: 100px;
-                            }
-                        }
                         &_three {
                             width: 536px;
-                            &:after {
-                                content: '';
-                                position: absolute;
-                                display: block;
-                                width: 20px;
-                                height: 20px;
-                                top: 50%;
-                                transform: translateY(-50%);
-                                background: #4A4A4A;
-                                border-radius: 100px;
-                            }
                         }
                     }
                 }

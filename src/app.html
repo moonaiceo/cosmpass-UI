@@ -60,6 +60,9 @@
                     <div class="vaults__settings__sorting">
                         <div class="vaults__settings__sorting-sort">
                             <div class="vaults__settings__sorting-label">Sort by</div>
+                            <div class="vaults__settings__sorting-sort__desc vaults__settings__sorting-sort__desc_active">
+                                <img src="icons/application/order.svg" alt="order arrow" class="vaults__settings__sorting-sort__icon">
+                            </div>
                             <div class="custom-select" id="sort">
                                 <select name="sort">
                                     <option data-sort-type="default">Default</option>
@@ -172,6 +175,7 @@
                 <div class="modal__actions">
                     <div class="modal__actions-item modal__actions-item_active">Deposit</div>
                     <div class="modal__actions-item">Withdraw</div>
+                    <div class="modal__actions-item">Unbond</div>
                 </div>
 
                 <div class="modal__action__deposit action__content action__content_active">
@@ -216,6 +220,9 @@
                                     <div class="modal__action__deposit__coins-item__label" id="coinLabelOne"></div>
                                     <div class="modal__action__deposit__coins-item__label available_balance" id="coinBalanceOne" data-input="coin one" onclick="setBalanceToInput(this)"><span>Available:</span> <span class="certain_balance">-</span> </div>
                                     <div class="modal__action__deposit__coins-item__input modal__action__deposit__coins-item__input_one">
+                                        <div class="modal__action__deposit__coins-item__input-circle_one">
+                                            <img src="" alt="token icon" class="modal__action__deposit__coins-item__input-img modal__action__deposit__coins-item__input-img_DOne">
+                                        </div>
                                         <input type="number" name="coin one">
                                     </div>
                                 </div>
@@ -225,6 +232,9 @@
                                 <div class="modal__action__deposit__coins-item__label" id="coinLabelTwo"></div>
                                 <div class="modal__action__deposit__coins-item__label available_balance" id="coinBalanceTwo" data-input="coin two" onclick="setBalanceToInput(this)"><span>Available:</span> <span class="certain_balance">-</span> </div>
                                 <div class="modal__action__deposit__coins-item__input modal__action__deposit__coins-item__input_two">
+                                    <div class="modal__action__deposit__coins-item__input-circle_one">
+                                        <img src="" alt="token icon" class="modal__action__deposit__coins-item__input-img modal__action__deposit__coins-item__input-img_DTwo">
+                                    </div>
                                     <input type="number" name="coin two">
                                 </div>
                             </div>
@@ -250,14 +260,20 @@
                         <div class="modal__action__deposit__coins-item">
                             <div class="modal__action__deposit__coins-item__label" id="WithdrawCoinLabelOne"></div>
                             <div class="modal__action__deposit__coins-item__label available_balance" id="WithdrawCoinBalanceOne" data-input="withdraw_coin_1" onclick="setBalanceToInput(this)"><span>Available:</span> <span class="certain_balance">-</span> </div>
-                            <div class="modal__action__deposit__coins-item__input modal__action__deposit__coins-item__input_one">
+                            <div class="modal__action__deposit__coins-item__input">
+                                <div class="modal__action__deposit__coins-item__input-circle_one">
+                                    <img src="" alt="token icon" class="modal__action__deposit__coins-item__input-img modal__action__deposit__coins-item__input-img_WOne">
+                                </div>
                                 <input type="number" name="withdraw_coin_1">
                             </div>
                         </div>
                         <div class="modal__action__deposit__coins-item">
                             <div class="modal__action__deposit__coins-item__label" id="WithdrawCoinLabelTwo"></div>
                             <div class="modal__action__deposit__coins-item__label available_balance" id="WithdrawCoinBalanceTwo" data-input="withdraw_coin_2" onclick="setBalanceToInput(this)"><span>Available:</span> <span class="certain_balance">-</span> </div>
-                            <div class="modal__action__deposit__coins-item__input modal__action__deposit__coins-item__input_two">
+                            <div class="modal__action__deposit__coins-item__input">
+                                <div class="modal__action__deposit__coins-item__input-circle_two">
+                                    <img src="" alt="token icon" class="modal__action__deposit__coins-item__input-img modal__action__deposit__coins-item__input-img_WTwo">
+                                </div>
                                 <input type="number" name="withdraw_coin_2">
                             </div>
                         </div>

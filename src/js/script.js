@@ -1,4 +1,6 @@
-import { CosmWasmClient, SigningCosmWasmClient } from "@cosmjs/cosmwasm-stargate";
+import { CosmWasmClient, SigningCosmWasmClient  } from "@cosmjs/cosmwasm-stargate";
+import {  SigningStargateClient  } from "@cosmjs/stargate";
+import { DirectSecp256k1HdWallet } from "@cosmjs/proto-signing";
 import { tokens } from './constants.js';
 const btnWallet = document.querySelector(".button__wallet");
 const btnModalAction = document.querySelectorAll(".button__action");
@@ -28,7 +30,7 @@ const contractAddress = {
   "malaga-420":
     "wasm1v8484th79cv2vh49sq949auu20yla3jh7rypzytp50quyly552vs3a4ugd",
   "osmo-test-4":
-    "osmo1xh7fzkxp63junffzazzxt9caumjjhrp6uf8nwdtw8mrry3gje42s4cdcxs",
+    "osmo163e0tvu9rpcc7ns6jn0m3y62z4505rvgzjf5kkx66am45syf4djstqk6xh",
   "uni-3": "juno1yfp9zyx9zhqe77d05yqjx3ctqjhzha0xn5d9x8zxcpp658ks2hvqlfjt72",
   "constantine-1":
     "archway1wnuakyjhvlnepk2g9ncvvaks0zy0axgx70pet4jh2nv8lmsuff9qseuvpc"
@@ -37,7 +39,7 @@ const contractAddress = {
 
 const get_count = async () => {
     const client_rpc = await CosmWasmClient.connect(rpcEndPoint[network]);
-    const getCount = await client_rpc.queryContractSmart(contractAddress[chainId['testnet']], {"query_all_pools": {}})
+    const getCount = await client_rpc.queryContractSmart(contractAddress[chainId['testnet']], {"query_all_pools": {}});
     const mock_data = {
         "pools": [
           {
@@ -265,7 +267,7 @@ const get_count = async () => {
             ]
           }
         ]
-    }
+    };
     return getCount;
 };
 
@@ -362,26 +364,82 @@ async function getBalancesForSC(denom1, denom2, address){
 
 async function getAutoCompounderAddress(pool_id){
   const client_rpc = await CosmWasmClient.connect(rpcEndPoint[network]);
-  // const userEntries = await client_rpc.queryContractSmart(contractAddress[chainId['testnet']], {"query_user_entries": {"user": account.address}});
-  // let autoCompounderAddress = userEntries['entries'].find((e) => e.pool_id === pool_id)['pool_addr'];
-  let autoCompounderAddress = "osmo";
-  // console.log(userEntries);
+  const userEntries = await client_rpc.queryContractSmart(contractAddress[chainId['testnet']], {query_user_entries: {user: account.address}});
+  console.log(userEntries)
+  let autoCompounderAddress = userEntries['entries'].find((e) => e.pool_id === pool_id)['pool_addr'];
+  console.log(autoCompounderAddress)
   return autoCompounderAddress;
   
 }
 
+async function createAutoCompounderSCs(){
+  const stargateClient = await SigningCosmWasmClient.connectWithSigner(
+    rpcEndPoint[network],
+    offlineSigner,
+    { gasPrice: "0.004uosmo"}
+  );
+  const initMsg = {
+    name: `${account.address} pool 1`,
+    symbol: "CPASS",
+    decimals: 6,
+    id: 1,
+    denom_1: "ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2",
+    denom_2: "uosmo",
+    white_list_denoms: [
+      "ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2",
+      "uosmo",
+    ],
+    fee: 0,
+    fee_collector_address: "osmo18ynwv4smhp7jdeqslpnh8c327ekwa9sralkhyp",
+    initial_balances: [ ],
+    mint: {
+      minter: "osmo18ynwv4smhp7jdeqslpnh8c327ekwa9sralkhyp"
+    }
+  }
+  
+  const tx = await stargateClient.instantiate(account.address, 5172, initMsg, "CPASS", "auto");
+  const scAddr = tx.contractAddress;
+  return scAddr;
+}
+
+
+async function addEntryForUser(autoCompounderAddress, poolId ){
+  const mnemonic = "chef letter plastic corn sunny pony also step much shine film need patient jaguar bless snap bike unfold rabbit bamboo wine field easily uncle";
+  const wallet = await DirectSecp256k1HdWallet.fromMnemonic(mnemonic, { prefix: "osmo" });
+  const walletAccounts = await wallet.getAccounts();
+  const walletAddress = walletAccounts[0].address
+  const client = await SigningCosmWasmClient.connectWithSigner(
+    rpcEndPoint[network],
+    wallet,
+    { gasPrice: "0.004uosmo"}
+    );
+  console.log(account.address, poolId, autoCompounderAddress)
+  let msg = {
+    new_entry: {
+      user: account.address,
+      pool_id: poolId,
+      lp_token_amount: "1",
+      token_1_amount: "1",
+      token_2_amount: "1",
+      pool_addr: autoCompounderAddress
+    }
+  }
+
+  let tx = await client.execute(walletAddress, contractAddress[chainId['testnet']], msg, "auto")
+ 
+  console.log(tx)
+}
 get_count().then(async (value) => {
   sort();
   if (localStorage.getItem("isLoggedIn")){
     await connectKeplr();
   }
-  console.log(value);
   await createVaultsList(value.pools);
 
   try{
     await get_total_value_locked();
   } catch (e){
-    console.log(e)
+    console.log(e);
   }
 
   if (isUserConnected === false){
@@ -394,12 +452,22 @@ get_count().then(async (value) => {
     $(this).on('click', async function() {
       let pool = value.pools[i];
       let gamm = `gamm/pool/${pool.pool_id}`;
+      let autoCompounderAddress;
       if (isUserConnected) {
         try {
           // query storage SC to get AC address of this user for clicked vault's pool_id
-          let autoCompounderAddress = await getAutoCompounderAddress(pool.pool_id);
-          $('input[name="autoCompounderAddress"]').attr("value", autoCompounderAddress);
-
+          try {
+            autoCompounderAddress = await getAutoCompounderAddress(pool.pool_id);
+            $('input[name="autoCompounderAddress"]').attr("value", autoCompounderAddress);
+          }
+          catch (e) {
+            console.log("You don't have any SC for this pool. Please approve this transaction to create a new sc specialized for you") 
+            let compounderAddress = await createAutoCompounderSCs();
+            await addEntryForUser(compounderAddress, pool.pool_id)
+            autoCompounderAddress = await getAutoCompounderAddress(pool.pool_id);
+            $('input[name="autoCompounderAddress"]').attr("value", autoCompounderAddress);
+          }
+          
           // getting balances for depositing funds
           let DepositBalances = await setBalances(pool.token_1.denom, pool.token_2.denom, gamm);
           $('.certain_balance')[0].innerHTML = DepositBalances[0];
@@ -416,7 +484,7 @@ get_count().then(async (value) => {
           $('.certain_balance')[4].innerHTML = WithdrawBalances[1];
           $('#WithdrawCoinBalanceTwo').attr("value", WithdrawBalances[1]);
         } catch (e) {
-          console.log(e)
+          console.log(e);
         }
       }
       // createJson(); 
@@ -425,14 +493,21 @@ get_count().then(async (value) => {
       $('#coinLabelOne').text($('.vaults__cards-item__header-title').eq(i).text().trim().split('-')[0]);
       $('#coinLabelTwo').text($('.vaults__cards-item__header-title').eq(i).text().trim().split('-')[1]);
       $('#coinLabelThree').text(gamm);
+      $('#WithdrawCoinLabelOne').text($('.vaults__cards-item__header-title').eq(i).text().trim().split('-')[0]);
+      $('#WithdrawCoinLabelTwo').text($('.vaults__cards-item__header-title').eq(i).text().trim().split('-')[1]);
       $('#depositTokens').text(pool.token_1.symbol + " + " + pool.token_2.symbol);
       $('#depositLP').text(pool.pool_id + " LP token");
-      $('input[name="coin one"]').attr("address", pool.token_1.denom)
-      $('input[name="coin two"]').attr("address", pool.token_2.denom)
-      $('input[name="coin three"]').attr("address", gamm)
+      $('input[name="coin one"]').attr("address", pool.token_1.denom);
+      $('input[name="coin two"]').attr("address", pool.token_2.denom);
+      $('input[name="coin three"]').attr("address", gamm);
       
-      $('input[name="withdraw_coin_1]').attr("address", pool.token_1.denom)
-      $('input[name="withdraw_coin_2"]').attr("address", pool.token_2.denom)
+      $('input[name="withdraw_coin_1]').attr("address", pool.token_1.denom);
+      $('input[name="withdraw_coin_2"]').attr("address", pool.token_2.denom);
+
+      $('.modal__action__deposit__coins-item__input-img_WOne').attr("src", pool.token_1.icon_url);
+      $('.modal__action__deposit__coins-item__input-img_WTwo').attr("src", pool.token_2.icon_url);
+      $('.modal__action__deposit__coins-item__input-img_DOne').attr("src", pool.token_1.icon_url);
+      $('.modal__action__deposit__coins-item__input-img_DTwo').attr("src", pool.token_2.icon_url);
 
       $('.modal__header__icon').each(function(j) {
         $(this).attr("src", $('.vaults__cards-item__header__icons').eq(i).find('.vaults__cards-item__header__icon').eq(j).attr("src"));
@@ -441,6 +516,7 @@ get_count().then(async (value) => {
       $('.modal__descr-item__descr').each(function(j) {
         $(this).html($('.vaults__cards-item').eq(i).find('.vaults__cards-item__body-item__descr').eq(j).html());
       });
+
       $('.overlay, .modal').fadeIn('slow');
       $("html").css("overflow", "hidden");
       showTokensInput();
@@ -472,11 +548,30 @@ get_count().then(async (value) => {
 
   // Sort
 
-  $('#sort').find('.select-items div').on('click', function() {
-    if ($(this).data("sort-type") !== "default") {
-      $(this).on('click', sortCards($(this).data("sort-type")));
+  $('.vaults__settings__sorting-sort__desc').on('click', function() {
+    $(this)
+      .toggleClass('vaults__settings__sorting-sort__desc_active')
+    if ($(this).hasClass('vaults__settings__sorting-sort__desc_active')) {
+      console.log($('.vaults__settings__sorting-sort__icon'));
+      $('.vaults__settings__sorting-sort__icon').attr("src", "../icons/application/order.svg").css("transform", "rotate(0deg)");
     } else {
-      $(this).on('click', sortCards("data-name"));
+      $('.vaults__settings__sorting-sort__icon').attr("src", "../icons/application/order.svg").css("transform", "rotate(180deg)");
+    }
+  });
+
+  $('#sort').find('.select-items div').on('click', function() {
+    if ($('.vaults__settings__sorting-sort__desc').hasClass("vaults__settings__sorting-sort__desc_active")) {
+      if ($(this).data("sort-type") !== "default") {
+        $(this).on('click', sortCardsDesc($(this).data("sort-type")));
+      } else {
+        $(this).on('click', sortCardsAsc("data-name"));
+      }
+    } else {
+      if ($(this).data("sort-type") !== "default") {
+        $(this).on('click', sortCardsAsc($(this).data("sort-type")));
+      } else {
+        $(this).on('click', sortCardsDesc("data-name"));
+      }
     }
   });
 
@@ -500,7 +595,7 @@ get_count().then(async (value) => {
 });
 
 async function get_user_usd_value_for_pool(id, address){
-  const url = `${lcdEndPoint[network]}/osmosis/lockup/v1beta1/account_locked_longer_duration/${account.address}`
+  const url = `${lcdEndPoint[network]}/osmosis/lockup/v1beta1/account_locked_longer_duration/${account.address}`;
   let total_usd_value = 0;
 
   const data = await $.get(url);
@@ -595,7 +690,7 @@ btnModalAction.forEach((btn) => {
   btn.addEventListener("click", function (elem){
     switch (this.textContent) {
       case "Deposit":
-        deposit_funds(offlineSigner, account, this);
+        join_pool(offlineSigner, account, this);
         break;
       case "Withdraw":
         withdraw_funds(offlineSigner, account, this);
@@ -604,7 +699,7 @@ btnModalAction.forEach((btn) => {
         console.log(`There is no case for such a button ${this.textContent}`);
     }
   });
-})
+});
 
 
 btnWallet.addEventListener("click", () => connectKeplr());
@@ -654,7 +749,8 @@ async function withdraw_funds(offlineSigner, account, element){
   let input2 = element.parentNode.querySelector('input[name="withdraw_coin_2"]');
   let denom1 = input1.getAttribute("address");
   let denom2 = input2.getAttribute("address");
-  console.log(input2, denom2)
+  let autoCompounderAddress = $('input[name="autoCompounderAddress"]').attr("value")
+
   const stargateClient = await SigningCosmWasmClient.connectWithSigner(
     rpcEndPoint[network],
     offlineSigner,
@@ -665,7 +761,7 @@ async function withdraw_funds(offlineSigner, account, element){
     withdraw_tokens: {
       to_address: account.address,
       tokens: [
-        // createMsgSendJson(denom1, input1.value),
+        createMsgSendJson(denom1, input1.value),
         createMsgSendJson(denom2, input2.value)
       ]
       }
@@ -673,7 +769,7 @@ async function withdraw_funds(offlineSigner, account, element){
  
   try {
     showModalLoadingStatus();
-    let transaction = await stargateClient.execute(account.address, "osmo1e4d8k78fvdxqtt8uut8tkw3r6540wrtx6pwn90yp3ughpezzfy9s6t4tts", withdrawMsg, "auto");
+    let transaction = await stargateClient.execute(account.address, autoCompounderAddress, withdrawMsg, "auto");
     console.log(transaction);
     statusModalShow("success");
   } catch (e){
@@ -683,29 +779,49 @@ async function withdraw_funds(offlineSigner, account, element){
   
 }
 
-async function estimate_amount_of_lp(){
+async function estimate_amount_of_lp(funds, poolId){
+  const response = await $.get(`https://api-osmosis.imperator.co/pools/v2/${poolId}`);
+  let total_shares = await get_total_shares(poolId);
+  const pair1 = response[0];
+  const pair2 = response[1];
+  const liquidity = pair1['liquidity'];
+  let usd_value = 0;
+  let amount_of_lp_tokens;
+  funds.forEach(({denom, amount}) => {
+    let exponent = getExponent(denom);
+    if (denom === pair1['denom']){
+      usd_value += (amount / 10 ** exponent) * pair1['price']
+    } else if (denom === pair2['denom']){
+      usd_value += (amount / 10 ** exponent) * pair2['price']
+    }
+  });
+
+  amount_of_lp_tokens = (usd_value / liquidity) * total_shares;
+  console.log(amount_of_lp_tokens);
+  return amount_of_lp_tokens;
   
 }
 
 async function join_pool(offlineSigner, account, element){
+  let autoCompounderAddress = $('input[name="autoCompounderAddress"]').attr("value")
   // (Amount of funds deposited / Total value of all funds in the pool) * Total number of LP tokens in the pool.
   const stargateClient = await SigningCosmWasmClient.connectWithSigner(
     rpcEndPoint[network],
     offlineSigner,
     { gasPrice: "0.004uosmo"}
   ); 
-
+  estimate_amount_of_lp([{denom: "iibc/A8CA5EE328FA10C9519DF6057DA1F69682D28F7D0F5CCC7ECB72E3DCA2D157A4", amount: "1000000"}, { denom: "uosmo", amount: "1000000"}], 1)
   let withdrawMsg = {
     join_pool: {
       pool_id: 1,
-      amount: "1233213213",
-      token_in_maxs: [{denom: "ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2", amount: "1000002"}, {denom: "uosmo", amount: "68298"}]
+      amount: "13213",
+      token_in_maxs: [{denom: "ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2", amount: "1000000"}, {denom: "uosmo", amount: "68290"}]
     }
     };
  
   try {
     showModalLoadingStatus();
-    let transaction = await stargateClient.execute(account.address, "osmo1e4d8k78fvdxqtt8uut8tkw3r6540wrtx6pwn90yp3ughpezzfy9s6t4tts", withdrawMsg, "auto");
+    let transaction = await stargateClient.executeMultiple(account.address, [{contractAddress: autoCompounderAddress, msg: withdrawMsg, funds: [{ denom: "uosmo", amount: "1000000"}]}, {contractAddress: autoCompounderAddress, msg: withdrawMsg}], "auto");
     console.log(transaction);
     statusModalShow("success");
   } catch (e){
@@ -716,36 +832,6 @@ async function join_pool(offlineSigner, account, element){
 }
 
 
-async function add_entry(offlineSigner, account, element){
-  let input1 = element.parentNode.querySelector('input[name="withdraw_coin_1"]');
-  let input2 = element.parentNode.querySelector('input[name="withdraw_coin_2"]');
-  let denom1 = input1.getAttribute("address");
-  let denom2 = input2.getAttribute("address");
-  const stargateClient = await SigningCosmWasmClient.connectWithSigner(
-    rpcEndPoint[network],
-    offlineSigner,
-    { gasPrice: "0.004uosmo"}
-  ); 
-
-  let withdrawMsg = {
-    new_entry: {
-      user:"osmo18l247apx8uwhg6kzxyuu2nre6n5zkpfate55pf", 
-      pool_id: "101", 
-      amount: "45000", 
-      pool_addr:"osmo101"}
-    }
- 
-  try {
-    showModalLoadingStatus()
-    let transaction = await stargateClient.execute(account.address, contractAddress[chainId['testnet']], withdrawMsg, "auto")
-    console.log(transaction);
-    statusModalShow("success");
-  } catch (e){
-    statusModalShow("error");
-    console.log(e);
-  }
-  
-}
 
 async function deposit_funds(offlineSigner, account, element) {
   let input1 = element.parentNode.querySelector('input[name="coin one"]');
@@ -755,6 +841,7 @@ async function deposit_funds(offlineSigner, account, element) {
   let denom1 = input1.getAttribute("address");
   let denom2 = input2.getAttribute("address");
   let denom3 = input3.getAttribute("address");
+  let autoCompounderAddress = $('input[name="autoCompounderAddress"]').attr("value")
   let msgJson = {};
   const stargateClient = await SigningCosmWasmClient.connectWithSigner(
     rpcEndPoint[network],
@@ -763,7 +850,7 @@ async function deposit_funds(offlineSigner, account, element) {
   if (choiceOfType === "tokens"){
     msgJson = {
       "fromAddress": account.address,
-      "toAddress": "osmo1e4d8k78fvdxqtt8uut8tkw3r6540wrtx6pwn90yp3ughpezzfy9s6t4tts",
+      "toAddress": autoCompounderAddress,
       "amount":[
         createMsgSendJson(denom1, input1.value),
         createMsgSendJson(denom2, input2.value),
@@ -772,7 +859,7 @@ async function deposit_funds(offlineSigner, account, element) {
   } else{
     msgJson = {
       "fromAddress": account.address,
-      "toAddress": "osmo1e4d8k78fvdxqtt8uut8tkw3r6540wrtx6pwn90yp3ughpezzfy9s6t4tts",
+      "toAddress": autoCompounderAddress,
       "amount":[
         createMsgSendJson(denom3, input3.value),
       ]
@@ -833,6 +920,7 @@ async function connectKeplr() {
         localStorage.setItem('isLoggedIn', true);
         isUserConnected = true;
         get_count();
+        show_user_related_elements();
         // Initialize the gaia api with the offline signer that is injected by Keplr extension.
         // const cosmJS = new SigningCosmosClient(
         //     // "https://lcd-osmosis.keplr.app/rest",
@@ -963,8 +1051,6 @@ async function createJson(type_of_msg) {
       break;
   }
 }
-
-// Skeleton loading
 
 
 // Modal
@@ -1178,7 +1264,9 @@ function closeAllSelect(elmnt) {
 then close all select boxes: */
 document.addEventListener("click", closeAllSelect);
 
-function sortCards(sortType) {
+// Descending order sort
+
+function sortCardsDesc(sortType) {
   let gridItems = document.querySelector('.vaults__cards__items');
 
   for (let i = 0; i < gridItems.children.length; i++) {
@@ -1193,6 +1281,25 @@ function sortCards(sortType) {
     hide_none_user_vaults();
   }
 }
+
+// Ascending Order Sort
+
+function sortCardsAsc(sortType) {
+  let gridItems = document.querySelector('.vaults__cards__items');
+
+  for (let i = 0; i < gridItems.children.length; i++) {
+    for (let j = i; j < gridItems.children.length; j++) {
+      if (gridItems.children[i].querySelector('[' + sortType + ']').getAttribute(sortType) > gridItems.children[j].querySelector('[' + sortType + ']').getAttribute(sortType)) {
+        let replacedNode = gridItems.replaceChild(gridItems.children[j], gridItems.children[i]);
+        insertAfter(replacedNode, gridItems.children[i]);
+      }
+    }
+  }
+  if ($('#myVaults').hasClass("vaults__settings-views__view_active")){
+    hide_none_user_vaults();
+  }
+}
+
 
 function insertAfter(elem, refElem) {
   return refElem.parentNode.insertBefore(elem, refElem.nextSibling);
