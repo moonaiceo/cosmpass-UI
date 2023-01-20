@@ -24,6 +24,8 @@ let offlineSigner;
 let account;
 let clientCosmWasm;
 let pools;
+let userEntries;
+let currentPool;
 let user_sc_addresses = {};
 
 const contractAddress = {
@@ -332,6 +334,7 @@ function show_user_related_elements(){
   $('#myVaults').show();
   $('.vaults__cards-item__body-item.balance').css("display", "flex");
   get_users_value_locked();
+
 }
 
 function getBalance(response, denom){
@@ -362,14 +365,10 @@ async function getBalancesForSC(denom1, denom2, address){
   return [balance1, balance2];
 }
 
-async function getAutoCompounderAddress(pool_id){
-  const client_rpc = await CosmWasmClient.connect(rpcEndPoint[network]);
-  const userEntries = await client_rpc.queryContractSmart(contractAddress[chainId['testnet']], {query_user_entries: {user: account.address}});
-  console.log(userEntries)
+function getAutoCompounderAddress(pool_id){
   let autoCompounderAddress = userEntries['entries'].find((e) => e.pool_id === pool_id)['pool_addr'];
-  console.log(autoCompounderAddress)
+  console.log(autoCompounderAddress);
   return autoCompounderAddress;
-  
 }
 
 async function createAutoCompounderSCs(){
@@ -395,7 +394,7 @@ async function createAutoCompounderSCs(){
     mint: {
       minter: "osmo18ynwv4smhp7jdeqslpnh8c327ekwa9sralkhyp"
     }
-  }
+  };
   
   const tx = await stargateClient.instantiate(account.address, 5172, initMsg, "CPASS", "auto");
   const scAddr = tx.contractAddress;
@@ -407,13 +406,13 @@ async function addEntryForUser(autoCompounderAddress, poolId ){
   const mnemonic = "chef letter plastic corn sunny pony also step much shine film need patient jaguar bless snap bike unfold rabbit bamboo wine field easily uncle";
   const wallet = await DirectSecp256k1HdWallet.fromMnemonic(mnemonic, { prefix: "osmo" });
   const walletAccounts = await wallet.getAccounts();
-  const walletAddress = walletAccounts[0].address
+  const walletAddress = walletAccounts[0].address;
   const client = await SigningCosmWasmClient.connectWithSigner(
     rpcEndPoint[network],
     wallet,
     { gasPrice: "0.004uosmo"}
     );
-  console.log(account.address, poolId, autoCompounderAddress)
+  console.log(account.address, poolId, autoCompounderAddress);
   let msg = {
     new_entry: {
       user: account.address,
@@ -423,13 +422,20 @@ async function addEntryForUser(autoCompounderAddress, poolId ){
       token_2_amount: "1",
       pool_addr: autoCompounderAddress
     }
-  }
+  };
 
-  let tx = await client.execute(walletAddress, contractAddress[chainId['testnet']], msg, "auto")
- 
-  console.log(tx)
+  let tx = await client.execute(walletAddress, contractAddress[chainId['testnet']], msg, "auto");
+  await updateUserEntries();
+  console.log(tx);
 }
+async function updateUserEntries(){
+  const client_rpc = await CosmWasmClient.connect(rpcEndPoint[network]);
+  userEntries = await client_rpc.queryContractSmart(contractAddress[chainId['testnet']], {query_user_entries: {user: account.address}});
+}
+
+  
 get_count().then(async (value) => {
+  pools = value.pools;
   sort();
   if (localStorage.getItem("isLoggedIn")){
     await connectKeplr();
@@ -447,27 +453,23 @@ get_count().then(async (value) => {
   }
   else {
     show_user_related_elements();
+    await updateUserEntries();
   }
   $('.vaults__cards-item').each(function(i) {
     $(this).on('click', async function() {
+      currentPool = value.pools[i];
       let pool = value.pools[i];
       let gamm = `gamm/pool/${pool.pool_id}`;
       let autoCompounderAddress;
       if (isUserConnected) {
         try {
           // query storage SC to get AC address of this user for clicked vault's pool_id
-          try {
-            autoCompounderAddress = await getAutoCompounderAddress(pool.pool_id);
+          try{
+            autoCompounderAddress = getAutoCompounderAddress(currentPool.pool_id);
             $('input[name="autoCompounderAddress"]').attr("value", autoCompounderAddress);
-          }
-          catch (e) {
-            console.log("You don't have any SC for this pool. Please approve this transaction to create a new sc specialized for you") 
-            let compounderAddress = await createAutoCompounderSCs();
-            await addEntryForUser(compounderAddress, pool.pool_id)
-            autoCompounderAddress = await getAutoCompounderAddress(pool.pool_id);
-            $('input[name="autoCompounderAddress"]').attr("value", autoCompounderAddress);
-          }
-          
+          } catch(e){
+            console.log(e);
+          }         
           // getting balances for depositing funds
           let DepositBalances = await setBalances(pool.token_1.denom, pool.token_2.denom, gamm);
           $('.certain_balance')[0].innerHTML = DepositBalances[0];
@@ -477,12 +479,18 @@ get_count().then(async (value) => {
           $('.certain_balance')[2].innerHTML = DepositBalances[2];
           $('#coinBalanceThree').attr("value", DepositBalances[2]);
 
+          $('input[name="coin one"]').attr("max", DepositBalances[0]);
+          $('input[name="coin two"]').attr("max", DepositBalances[1]);
+
           // getting balances for withdraw funds
           let WithdrawBalances = await getBalancesForSC(pool.token_1.denom, pool.token_2.denom, autoCompounderAddress);
           $('.certain_balance')[3].innerHTML = WithdrawBalances[0];
           $('#WithdrawCoinBalanceOne').attr("value", WithdrawBalances[0]);
           $('.certain_balance')[4].innerHTML = WithdrawBalances[1];
           $('#WithdrawCoinBalanceTwo').attr("value", WithdrawBalances[1]);
+
+          $('input[name="withdraw_coin_1"]').attr("max", WithdrawBalances[0]);
+          $('input[name="withdraw_coin_2"]').attr("max", WithdrawBalances[1]);
         } catch (e) {
           console.log(e);
         }
@@ -501,7 +509,7 @@ get_count().then(async (value) => {
       $('input[name="coin two"]').attr("address", pool.token_2.denom);
       $('input[name="coin three"]').attr("address", gamm);
       
-      $('input[name="withdraw_coin_1]').attr("address", pool.token_1.denom);
+      $('input[name="withdraw_coin_1"]').attr("address", pool.token_1.denom);
       $('input[name="withdraw_coin_2"]').attr("address", pool.token_2.denom);
 
       $('.modal__action__deposit__coins-item__input-img_WOne').attr("src", pool.token_1.icon_url);
@@ -515,7 +523,9 @@ get_count().then(async (value) => {
 
       $('.modal__descr-item__descr').eq(0).html(`${pool.tvl} USD`);
       $('.modal__descr-item__descr').eq(1).html(`<span class="span-apy">${pool.apr.two_week}%</span> ${pool.apy.two_week}%`);
-      $('.modal__descr-item__descr').eq(2).html(`${pool.apy.one_day}%`);
+
+
+      $('.modal__descr-item__descr').eq(2).html(`${pool.apy.two_week}%`);
 
       $('.overlay, .modal').fadeIn('slow');
       $("html").css("overflow", "hidden");
@@ -671,13 +681,10 @@ const createVaultsList = async (vaults) => {
                   <div class="vaults__cards-item__body-item__descr" data-tvl>${vault.tvl} USD</div>
               </div>
               <div class="vaults__cards-item__body-item">
-                  <div class="vaults__cards-item__body-item__title">APY</div>
+                  <div class="vaults__cards-item__body-item__title" data-one-day="${vault.apy.one_day}" data-one-week="${vault.apy.one_week}" data-two-week="${vault.apy.two_week}">APY</div>
                   <div class="vaults__cards-item__body-item__descr label-apy" data-apy><span class="span-apy">${vault.apr.two_week}%</span>  ${vault.apy.two_week}%</div>
               </div>
-              <div class="vaults__cards-item__body-item">
-                  <div class="vaults__cards-item__body-item__title">Daily</div>
-                  <div class="vaults__cards-item__body-item__descr" data-daily>${vault.apy.one_day}%</div>
-              </div>
+               
           </div>
       </div>
   </div>
@@ -687,10 +694,21 @@ const createVaultsList = async (vaults) => {
 
 
 btnModalAction.forEach((btn) => {
-  btn.addEventListener("click", function (elem){
+  btn.addEventListener("click", async function (elem){
     switch (this.textContent) {
       case "Deposit":
-        join_pool(offlineSigner, account, this);
+        let autoCompounderAddress;
+        try {
+          autoCompounderAddress =  getAutoCompounderAddress(currentPool.pool_id);
+        }
+        catch (e) {
+          console.log("You don't have any SC for this pool. Please approve this transaction to create a new sc specialized for you"); 
+          let compounderAddress = await createAutoCompounderSCs();
+          await addEntryForUser(compounderAddress, currentPool.pool_id);
+          autoCompounderAddress =  getAutoCompounderAddress(currentPool.pool_id);
+          $('input[name="autoCompounderAddress"]').attr("value", autoCompounderAddress);
+        }
+        deposit_funds(offlineSigner, account, this);
         break;
       case "Withdraw":
         withdraw_funds(offlineSigner, account, this);
@@ -723,6 +741,22 @@ $('input[type=radio][name=deposit-coin]').change(function() {
   }
 });
 
+function setAPY(apy) {
+  $('.modal__descr-item__descr').eq(2).html(`${apy}%`);
+}
+
+$('input[type=radio][name=unbond-period]').change(function() {
+  if (this.value == '14') {
+      setAPY(currentPool.apy.two_week);
+  }
+  else if (this.value == '7') {
+    setAPY(currentPool.apy.one_week);
+  }
+  else if (this.value == '1') {
+    setAPY(currentPool.apy.one_day);
+}
+});
+
 function getExponent(denom){
   let exponents = tokens;
   let exponent;
@@ -749,8 +783,8 @@ async function withdraw_funds(offlineSigner, account, element){
   let input2 = element.parentNode.querySelector('input[name="withdraw_coin_2"]');
   let denom1 = input1.getAttribute("address");
   let denom2 = input2.getAttribute("address");
-  let autoCompounderAddress = $('input[name="autoCompounderAddress"]').attr("value")
-
+  let autoCompounderAddress = $('input[name="autoCompounderAddress"]').attr("value");
+  console.log(input1, input2);
   const stargateClient = await SigningCosmWasmClient.connectWithSigner(
     rpcEndPoint[network],
     offlineSigner,
@@ -790,9 +824,9 @@ async function estimate_amount_of_lp(funds, poolId){
   funds.forEach(({denom, amount}) => {
     let exponent = getExponent(denom);
     if (denom === pair1['denom']){
-      usd_value += (amount / 10 ** exponent) * pair1['price']
+      usd_value += (amount / 10 ** exponent) * pair1['price'];
     } else if (denom === pair2['denom']){
-      usd_value += (amount / 10 ** exponent) * pair2['price']
+      usd_value += (amount / 10 ** exponent) * pair2['price'];
     }
   });
 
@@ -803,14 +837,14 @@ async function estimate_amount_of_lp(funds, poolId){
 }
 
 async function join_pool(offlineSigner, account, element){
-  let autoCompounderAddress = $('input[name="autoCompounderAddress"]').attr("value")
+  let autoCompounderAddress = $('input[name="autoCompounderAddress"]').attr("value");
   // (Amount of funds deposited / Total value of all funds in the pool) * Total number of LP tokens in the pool.
   const stargateClient = await SigningCosmWasmClient.connectWithSigner(
     rpcEndPoint[network],
     offlineSigner,
     { gasPrice: "0.004uosmo"}
   ); 
-  estimate_amount_of_lp([{denom: "iibc/A8CA5EE328FA10C9519DF6057DA1F69682D28F7D0F5CCC7ECB72E3DCA2D157A4", amount: "1000000"}, { denom: "uosmo", amount: "1000000"}], 1)
+  estimate_amount_of_lp([{denom: "iibc/A8CA5EE328FA10C9519DF6057DA1F69682D28F7D0F5CCC7ECB72E3DCA2D157A4", amount: "1000000"}, { denom: "uosmo", amount: "1000000"}], 1);
   let withdrawMsg = {
     join_pool: {
       pool_id: 1,
@@ -841,7 +875,7 @@ async function deposit_funds(offlineSigner, account, element) {
   let denom1 = input1.getAttribute("address");
   let denom2 = input2.getAttribute("address");
   let denom3 = input3.getAttribute("address");
-  let autoCompounderAddress = $('input[name="autoCompounderAddress"]').attr("value")
+  let autoCompounderAddress = $('input[name="autoCompounderAddress"]').attr("value");
   let msgJson = {};
   const stargateClient = await SigningCosmWasmClient.connectWithSigner(
     rpcEndPoint[network],
@@ -921,6 +955,7 @@ async function connectKeplr() {
         isUserConnected = true;
         get_count();
         show_user_related_elements();
+
         // Initialize the gaia api with the offline signer that is injected by Keplr extension.
         // const cosmJS = new SigningCosmosClient(
         //     // "https://lcd-osmosis.keplr.app/rest",

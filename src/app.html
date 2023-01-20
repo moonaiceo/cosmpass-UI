@@ -163,7 +163,7 @@
                 </div>
 
                 <div class="modal__descr-item">
-                    <div class="modal__descr-item__header">Daily</div>
+                    <div class="modal__descr-item__header">APR</div>
                     <div class="modal__descr-item__descr"></div>
                 </div>
             </div>
@@ -194,17 +194,17 @@
     
                             <div class="modal__action__deposit-unbond__period">
                                 <label class="label">14 days
-                                    <input type="radio" name="unbond-period">
+                                    <input type="radio" name="unbond-period" value="14" apy="" checked>
                                     <span class="checkmark"></span>
                                 </label>
     
                                 <label class="label">7 days
-                                    <input type="radio" name="unbond-period" checked>
+                                    <input type="radio" name="unbond-period" value="7">
                                     <span class="checkmark"></span>
                                 </label>
 
                                 <label class="label">a day
-                                    <input type="radio" name="unbond-period">
+                                    <input type="radio" name="unbond-period" value="1">
                                     <span class="checkmark"></span>
                                 </label>
                             </div>
@@ -219,7 +219,7 @@
                                         <div class="modal__action__deposit__coins-item__input-circle_one">
                                             <img src="" alt="token icon" class="modal__action__deposit__coins-item__input-img modal__action__deposit__coins-item__input-img_DOne">
                                         </div>
-                                        <input type="number" name="coin one">
+                                        <input type="number" name="coin one" min=5>
                                     </div>
                                 </div>
                         
@@ -309,7 +309,7 @@
 
             <div class="modal__fee-item">
                 <div class="modal__fee-item__header">Performance Fee</div>
-                <div class="modal__fee-item__descr">9.50%</div>
+                <div class="modal__fee-item__descr">5.0%</div>
             </div>
         </div>
         
