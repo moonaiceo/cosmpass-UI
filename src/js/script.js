@@ -741,6 +741,23 @@ $('input[type=radio][name=deposit-coin]').change(function() {
   }
 });
 
+$('input[type=number]').on('input', function() {
+  if (this.value > parseFloat($(this).attr("max"))) {
+    $(this.parentNode).addClass("incorrect");
+    $('.button__action')
+    .removeClass('button__action_active').prop('disabled', true);
+  }
+  else if (this.value === undefined || this.value <= 0) {
+    $('.button__action')
+    .removeClass('button__action_active').prop('disabled', true);
+    $(this.parentNode).removeClass("incorrect");
+  } else{
+    $(this.parentNode).removeClass("incorrect");
+    $('.button__action')
+    .addClass('button__action_active').prop('disabled', false);
+  }
+});
+
 function setAPY(apy) {
   $('.modal__descr-item__descr').eq(2).html(`${apy}%`);
 }
@@ -1130,8 +1147,8 @@ $('.modal__actions').on('click', ':not(.modal__actions-item_active)', function()
       // $('.modal__action__withdraw-input')
       //   .removeClass('modal__action__withdraw-input_active').find('input').prop('disabled', true);
     } else {
-      // $('.button__action')
-      //   .removeClass('button__action_active').prop('disabled', true);
+      $('.button__action')
+        .removeClass('button__action_active').prop('disabled', true);
     }
 });
 

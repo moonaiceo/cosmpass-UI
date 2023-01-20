@@ -564,6 +564,9 @@
   padding: 10px 8px;
   width: 256px;
 }
+.modal__action__deposit__coins-item__input.incorrect {
+  border: 2px solid red;
+}
 .modal__action__deposit__coins-item__input-circle_one {
   position: absolute;
   display: flex;
