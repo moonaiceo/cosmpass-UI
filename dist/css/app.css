@@ -24,6 +24,27 @@
   display: flex;
   justify-content: center;
 }
+.header__button {
+  position: relative;
+  cursor: pointer;
+}
+.header__button__menu {
+  position: absolute;
+  display: none;
+  width: 160px;
+  left: 16px;
+  text-align: center;
+  background: #4A4A4A;
+  box-shadow: 0px 8px 32px rgba(0, 0, 0, 0.08);
+  border-bottom-left-radius: 16px;
+  border-bottom-right-radius: 16px;
+  padding: 12px;
+  z-index: 1;
+  transition: 0.3s all;
+}
+.header__button__menu:hover {
+  background: #2C2C2C;
+}
 
 .promo {
   background: linear-gradient(90.08deg, #333333 0.06%, #494949 99.93%);
@@ -962,6 +983,9 @@ body {
   height: 12px;
   background: #91FF76;
   border-radius: 100px;
+}
+.button:hover {
+  background: #8C8B8B;
 }
 
 input::-webkit-outer-spin-button,

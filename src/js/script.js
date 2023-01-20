@@ -457,6 +457,7 @@ get_count().then(async (value) => {
   }
   $('.vaults__cards-item').each(function(i) {
     $(this).on('click', async function() {
+      hideHeaderButtonMenu();
       currentPool = value.pools[i];
       let pool = value.pools[i];
       let gamm = `gamm/pool/${pool.pool_id}`;
@@ -551,10 +552,6 @@ get_count().then(async (value) => {
       .attr("data-apy", parseFloat($(this).clone().children().remove().end().text(), 10));
   });
   
-  $('.vaults__cards-item__body-item__descr[data-daily]').each(function(i) {
-    $(this)
-      .attr("data-daily", parseFloat($(this).text(), 10));
-  });
 
   // Sort
 
@@ -949,40 +946,72 @@ async function connectKeplr() {
         // Also, it will request that the user unlock the wallet if the wallet is locked.
     }
     else {
-        await window.keplr.enable(chainId[network]);
+        if (isUserConnected) {
+            $(".header__button__menu").toggle();
+            // if ($(".header__button__menu").is(":visible")) {
+            //   $(document).on("click", function(e) {
+            //     e.stopPropagation();
+            //     console.log(e.target.id);
+            //     console.log(this);
+            //     console.log($(".header__button__menu").is(":visible"));
+            //     if (e.target.id !== "disconnect" && !e.target.classList.contains("header__button__menu")) {
+            //       $("#disconnect").hide();
+            //     }
+            //   });
+            // }
+            $(".header__button__menu").on("click", () => disconnectWallet());
+        }
+        else {
+          await window.keplr.enable(chainId[network]);
     
-        offlineSigner = window.keplr.getOfflineSigner(chainId[network]);
-        console.log(offlineSigner);
+          offlineSigner = window.keplr.getOfflineSigner(chainId[network]);
+          console.log(offlineSigner);
+      
+          // You can get the address/public keys by `getAccounts` method.
+          // It can return the array of address/public key.
+          // But, currently, Keplr extension manages only one address/public key pair.
+          // XXX: This line is needed to set the sender address for SigningCosmosClient.
+          const accounts = await offlineSigner.getAccounts();
+
+          // const transaction = await sendTx(chainId[network], accounts[0].pubkey, "sync");
+          // console.log(transaction);
+
+          account = accounts[0];
+          
+          console.log(accounts[0]);
+          btnWallet.innerHTML = accounts[0].address;
+          btnWallet.classList.add('button__wallet_signed');
+          localStorage.setItem('isLoggedIn', true);
+          isUserConnected = true;
+          get_count();
+          show_user_related_elements();
+
+          // Initialize the gaia api with the offline signer that is injected by Keplr extension.
+          // const cosmJS = new SigningCosmosClient(
+          //     // "https://lcd-osmosis.keplr.app/rest",
+          //     "https://rest.sentry-01.theta-testnet.polypore.xyz",
+          //     accounts[0].address,
+          //     offlineSigner
+          // );
+        }
+
+    }
     
-        // You can get the address/public keys by `getAccounts` method.
-        // It can return the array of address/public key.
-        // But, currently, Keplr extension manages only one address/public key pair.
-        // XXX: This line is needed to set the sender address for SigningCosmosClient.
-        const accounts = await offlineSigner.getAccounts();
+}
 
-        // const transaction = await sendTx(chainId[network], accounts[0].pubkey, "sync");
-        // console.log(transaction);
 
-        account = accounts[0];
-        
-        console.log(accounts[0]);
-        btnWallet.innerHTML = accounts[0].address;
-        btnWallet.classList.add('button__wallet_signed');
-        localStorage.setItem('isLoggedIn', true);
-        isUserConnected = true;
-        get_count();
-        show_user_related_elements();
+function disconnectWallet() {
+  window.keplr.disable(chainId[network]);
+  btnWallet.innerHTML = "Connect";
+  btnWallet.classList.remove('button__wallet_signed');
+  localStorage.setItem('isLoggedIn', false);
+  isUserConnected = false;
+  hide_user_related_elements();
+  hideHeaderButtonMenu();
+}
 
-        // Initialize the gaia api with the offline signer that is injected by Keplr extension.
-        // const cosmJS = new SigningCosmosClient(
-        //     // "https://lcd-osmosis.keplr.app/rest",
-        //     "https://rest.sentry-01.theta-testnet.polypore.xyz",
-        //     accounts[0].address,
-        //     offlineSigner
-        // );
-
-  }
-    
+function hideHeaderButtonMenu() {
+  $(".header__button__menu").hide();
 }
 
 function hide_none_user_vaults(){
@@ -1207,6 +1236,7 @@ function showModalLoadingStatus(){
 $("#fsearch").on("keyup", function() {
   let value = "";
   let search = $(this).val().toLowerCase();
+  hideHeaderButtonMenu();
 
   // if ($('#farms .select-selected').text() !== "Active farms") {
   //   value = $('#farms .select-selected').text().toLowerCase();
@@ -1275,6 +1305,7 @@ for (i = 0; i < l; i++) {
     and open/close the current select box: */
     e.stopPropagation();
     closeAllSelect(this);
+    hideHeaderButtonMenu();
     this.nextSibling.classList.toggle("select-hide");
     this.classList.toggle("select-arrow-active");
   });

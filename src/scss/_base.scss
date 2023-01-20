@@ -119,6 +119,9 @@ body {
             }
         }
     }
+    &:hover {
+      background: #8C8B8B;
+    }
 }
 
 input::-webkit-outer-spin-button,

@@ -116,6 +116,9 @@ body {
   background: #91FF76;
   border-radius: 100px;
 }
+.button:hover {
+  background: #8C8B8B;
+}
 
 input::-webkit-outer-spin-button,
 input::-webkit-inner-spin-button {
