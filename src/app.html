@@ -15,7 +15,14 @@
                 <img src="img/application/icon.svg" alt="logo" class="header__logo__icon">
             </a>
 
-            <button class="button button__wallet">Connect</button>
+            <div class="header__button">
+                <button class="button button__wallet">Connect</button>
+
+                <div class="header__button__menu" id="disconnect">
+                    <div>Disconnect</div>
+                </div>
+            </div>
+            
         </div>
     </section>
 
@@ -68,7 +75,6 @@
                                     <option data-sort-type="default">Default</option>
                                     <option data-sort-type="data-apy">APY</option>
                                     <option data-sort-type="data-tvl">TVL</option>
-                                    <option data-sort-type="data-daily">Daily</option>
                                 </select>
                             </div>
                         </div>
@@ -331,7 +337,7 @@
             </div>
         </div>
         
-        <button class="button button__action">Deposit</button>
+        <button class="button button__action" disabled>Deposit</button>
     </div>
             
     <div class="modal__mini">

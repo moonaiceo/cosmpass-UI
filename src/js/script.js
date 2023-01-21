@@ -313,17 +313,42 @@ async function get_users_value_locked(){
   $('#user_value_locked .promo__value__number').text(numberWithSpaces(userValueLocked.toFixed(2)) + " USD");
 }
 
-function hide_user_related_elements(){
-  $('#user_value_locked').hide();
-  $('.balance').hide();
+function clearInputsValues(){
+  $('.certain_balance')[3].innerHTML = '-';
+  $('#WithdrawCoinBalanceOne').attr("value", 0);
+  $('.certain_balance')[4].innerHTML = '-';
+  $('#WithdrawCoinBalanceTwo').attr("value", 0);
+
+  $('input[name="withdraw_coin_1"]').attr("max", 0);
+  $('input[name="withdraw_coin_2"]').attr("max", 0);
+  $('.certain_balance')[0].innerHTML ='-';
+  $('#coinBalanceOne').attr("value", 0);
+  $('.certain_balance')[1].innerHTML = '-';
+  $('#coinBalanceTwo').attr("value", 0);
+  $('.certain_balance')[2].innerHTML ='-';
+  $('#coinBalanceThree').attr("value", 0);
+
+  $('input[name="coin one"]').attr("max", 0);
+  $('input[name="coin two"]').attr("max", 0);
+
 }
 
-function show_user_related_elements(){
+function hide_user_related_elements(){
+  $('#user_value_locked').hide();
+  $('#myVaults').hide();
+  $('.balance').hide();
+  $('.modal__action__unbond').html("");
+  $('input[name="autoCompounderAddress"]').attr("value", "");
+  userEntries = undefined;
+  clearInputsValues()
+}
+
+async function show_user_related_elements(){
   $('#user_value_locked').show();
   $('#myVaults').show();
   $('.vaults__cards-item__body-item.balance').css("display", "flex");
   get_users_value_locked();
-
+  await updateUserEntries();
 }
 
 function getBalance(response, denom){
@@ -433,13 +458,14 @@ get_count().then(async (value) => {
    
   if (isUserConnected)  await updateUserEntries();
 
-  await createVaultsList(value.pools).then();
+  await createVaultsList(value.pools);
 
   if (isUserConnected === false){
     hide_user_related_elements();
+
   }
   else {
-    show_user_related_elements()
+    await show_user_related_elements()
   }
 
   try{
@@ -452,8 +478,7 @@ get_count().then(async (value) => {
 
   $('.vaults__cards-item').each(function(i) {
     $(this).on('click', async function() {
-      $('.modal__action__deposit__coins-item__input').removeClass("incorrect");
-      $('input[type=number]').val("");
+      hideHeaderButtonMenu();
       currentPool = value.pools[i];
       let pool = value.pools[i];
       let gamm = `gamm/pool/${pool.pool_id}`;
@@ -561,10 +586,6 @@ get_count().then(async (value) => {
       .attr("data-apy", parseFloat($(this).clone().children().remove().end().text(), 10));
   });
   
-  $('.vaults__cards-item__body-item__descr[data-daily]').each(function(i) {
-    $(this)
-      .attr("data-daily", parseFloat($(this).text(), 10));
-  });
 
   // Sort
 
@@ -1023,28 +1044,73 @@ async function connectKeplr() {
         // Also, it will request that the user unlock the wallet if the wallet is locked.
     }
     else {
-        await window.keplr.enable(chainId[network]);
+        if (isUserConnected) {
+            $(".header__button__menu").toggle();
+            // if ($(".header__button__menu").is(":visible")) {
+            //   $(document).on("click", function(e) {
+            //     e.stopPropagation();
+            //     console.log(e.target.id);
+            //     console.log(this);
+            //     console.log($(".header__button__menu").is(":visible"));
+            //     if (e.target.id !== "disconnect" && !e.target.classList.contains("header__button__menu")) {
+            //       $("#disconnect").hide();
+            //     }
+            //   });
+            // }
+            $(".header__button__menu").on("click", () => disconnectWallet());
+        }
+        else {
+          await window.keplr.enable(chainId[network]);
     
-        offlineSigner = window.keplr.getOfflineSigner(chainId[network]);
-        console.log(offlineSigner);
-    
-        // You can get the address/public keys by `getAccounts` method.
-        // It can return the array of address/public key.
-        // But, currently, Keplr extension manages only one address/public key pair.
-        // XXX: This line is needed to set the sender address for SigningCosmosClient.
-        const accounts = await offlineSigner.getAccounts();
+          offlineSigner = window.keplr.getOfflineSigner(chainId[network]);
+          console.log(offlineSigner);
+      
+          // You can get the address/public keys by `getAccounts` method.
+          // It can return the array of address/public key.
+          // But, currently, Keplr extension manages only one address/public key pair.
+          // XXX: This line is needed to set the sender address for SigningCosmosClient.
+          const accounts = await offlineSigner.getAccounts();
 
-        account = accounts[0];
-        
-        console.log(accounts[0]);
-        btnWallet.innerHTML = accounts[0].address;
-        btnWallet.classList.add('button__wallet_signed');
-        localStorage.setItem('isLoggedIn', true);
-        isUserConnected = true;
-        get_count();
-        show_user_related_elements();
-  }
+          // const transaction = await sendTx(chainId[network], accounts[0].pubkey, "sync");
+          // console.log(transaction);
+
+          account = accounts[0];
+          
+          console.log(accounts[0]);
+          btnWallet.innerHTML = accounts[0].address;
+          btnWallet.classList.add('button__wallet_signed');
+          localStorage.setItem('isLoggedIn', true);
+          isUserConnected = true;
+          get_count();
+          await show_user_related_elements();
+
+          // Initialize the gaia api with the offline signer that is injected by Keplr extension.
+          // const cosmJS = new SigningCosmosClient(
+          //     // "https://lcd-osmosis.keplr.app/rest",
+          //     "https://rest.sentry-01.theta-testnet.polypore.xyz",
+          //     accounts[0].address,
+          //     offlineSigner
+          // );
+        }
+
+    }
     
+}
+
+
+function disconnectWallet() {
+  window.keplr.disable(chainId[network]);
+  btnWallet.innerHTML = "Connect";
+  btnWallet.classList.remove('button__wallet_signed');
+  localStorage.setItem('isLoggedIn', false);
+  isUserConnected = false;
+  hide_user_related_elements();
+  
+  hideHeaderButtonMenu();
+}
+
+function hideHeaderButtonMenu() {
+  $(".header__button__menu").hide();
 }
 
 function hide_none_user_vaults(){
@@ -1175,12 +1241,10 @@ async function showLocks(){
   for (const elem of data['locks']) {
     locksHTML += generateLockHTML(elem);
   }
-  console.log(locksHTML)
     $('.modal__action__unbond').html(
     ` <div class="modal__action__unbond-lock">
             ${locksHTML}
       </div>`)
-  return true ? data : false
 }
 
 $('.modal__action__withdraw-label__unbond').on('click', function() {
@@ -1238,6 +1302,7 @@ function showModalLoadingStatus(){
 $("#fsearch").on("keyup", function() {
   let value = "";
   let search = $(this).val().toLowerCase();
+  hideHeaderButtonMenu();
 
   // if ($('#farms .select-selected').text() !== "Active farms") {
   //   value = $('#farms .select-selected').text().toLowerCase();
@@ -1306,6 +1371,7 @@ for (i = 0; i < l; i++) {
     and open/close the current select box: */
     e.stopPropagation();
     closeAllSelect(this);
+    hideHeaderButtonMenu();
     this.nextSibling.classList.toggle("select-hide");
     this.classList.toggle("select-arrow-active");
   });
