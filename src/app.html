@@ -33,8 +33,8 @@
                     </div>
 
                     <div class="promo__value__text" id="user_value_locked">
-                        <div class="promo__value__header promo__value__header_2">Mine value Locked</div>
-                        <div class="promo__value__number" >—</div>
+                        <div class="promo__value__header promo__value__header_2 ">Mine value Locked</div>
+                        <div class="promo__value__number " >—</div>
                     </div>
                 </div>
             </div>
@@ -294,6 +294,24 @@
                         <!-- </form> -->
                     <!-- </div> -->
                 </div>
+                <div class="modal__action__unbond action__content">
+                    <div class="modal__action__unbond-lock">
+                        <div class="modal__action__unbond-lock__label">
+                            <p>Lock ID: <span>1001</span></p>
+                            <p>Duration: <span>86400s</span></p>
+                            <p>End-time: <span>0001-01-01T00:00:00Z</span></p>
+                            <p>Denom: <span>gamm/pool/1</span></p>
+                            <p>Amount: <span>841883005888993843</span></p>
+                        </div>
+                        <div class="modal__action__unbond-lock__label">
+                            <p>Lock ID: <span>1001</span></p>
+                            <p>Duration: <span>86400s</span></p>
+                            <p>End-time: <span class="warning">Firstly, unbond lock by clicking button below.</span>
+                            <p>Denom: <span>gamm/pool/1</span></p>
+                            <p>Amount: <span>841883005888993843</span></p>
+                        </div>
+                    </div>
+                </div>
             </div>
 
         <div class="modal__fee">
@@ -328,7 +346,7 @@
     <script>
         const container = document.querySelector(".vaults__cards__items");
         const cardTemplate = document.getElementById("card-template");
-        for (let i = 0; i < 3; i++) {
+        for (let i = 0; i < 4; i++) {
             container.append(cardTemplate.content.cloneNode(true));
         }
     </script>

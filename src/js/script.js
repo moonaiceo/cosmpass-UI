@@ -1,5 +1,4 @@
 import { CosmWasmClient, SigningCosmWasmClient  } from "@cosmjs/cosmwasm-stargate";
-import {  SigningStargateClient  } from "@cosmjs/stargate";
 import { DirectSecp256k1HdWallet } from "@cosmjs/proto-signing";
 import { tokens } from './constants.js';
 const btnWallet = document.querySelector(".button__wallet");
@@ -19,6 +18,7 @@ const lcdEndPoint = {
   "mainnet": "https://lcd.osmosis.zone/",
   "testnet": "https://lcd-test.osmosis.zone/",
 };
+const CODE_ID = 5172;
 let isUserConnected = false;
 let offlineSigner;
 let account;
@@ -27,7 +27,7 @@ let pools;
 let userEntries;
 let currentPool;
 let user_sc_addresses = {};
-
+let userValueLocked = 0;
 const contractAddress = {
   "malaga-420":
     "wasm1v8484th79cv2vh49sq949auu20yla3jh7rypzytp50quyly552vs3a4ugd",
@@ -310,18 +310,7 @@ async function get_total_value_locked(){
 
 
 async function get_users_value_locked(){
-  const url = `${lcdEndPoint[network]}/osmosis/lockup/v1beta1/account_locked_longer_duration/${account.address}`;
-  let total_usd_value = 0;
-
-  const data = await $.get(url);
-
-  for (const elem of data['locks']) {
-    let coin = elem['coins'][0];
-    const pool_id = coin['denom'].split("/").pop();
-    let usd_value = await calculate_usd_value(pool_id, coin['amount']);
-    total_usd_value += usd_value;
-  }
-  $('#user_value_locked .promo__value__number').text(numberWithSpaces(total_usd_value.toFixed(2)) + " USD");
+  $('#user_value_locked .promo__value__number').text(numberWithSpaces(userValueLocked.toFixed(2)) + " USD");
 }
 
 function hide_user_related_elements(){
@@ -396,7 +385,7 @@ async function createAutoCompounderSCs(){
     }
   };
   
-  const tx = await stargateClient.instantiate(account.address, 5172, initMsg, "CPASS", "auto");
+  const tx = await stargateClient.instantiate(account.address, CODE_ID, initMsg, "CPASS", "auto");
   const scAddr = tx.contractAddress;
   return scAddr;
 }
@@ -410,16 +399,16 @@ async function addEntryForUser(autoCompounderAddress, poolId ){
   const client = await SigningCosmWasmClient.connectWithSigner(
     rpcEndPoint[network],
     wallet,
-    { gasPrice: "0.004uosmo"}
+    {gasPrice: "0.004uosmo"}
     );
   console.log(account.address, poolId, autoCompounderAddress);
   let msg = {
     new_entry: {
       user: account.address,
       pool_id: poolId,
-      lp_token_amount: "1",
-      token_1_amount: "1",
-      token_2_amount: "1",
+      lp_token_amount: "0",
+      token_1_amount: "0",
+      token_2_amount: "0",
       pool_addr: autoCompounderAddress
     }
   };
@@ -428,6 +417,7 @@ async function addEntryForUser(autoCompounderAddress, poolId ){
   await updateUserEntries();
   console.log(tx);
 }
+
 async function updateUserEntries(){
   const client_rpc = await CosmWasmClient.connect(rpcEndPoint[network]);
   userEntries = await client_rpc.queryContractSmart(contractAddress[chainId['testnet']], {query_user_entries: {user: account.address}});
@@ -440,7 +430,17 @@ get_count().then(async (value) => {
   if (localStorage.getItem("isLoggedIn")){
     await connectKeplr();
   }
-  await createVaultsList(value.pools);
+   
+  if (isUserConnected)  await updateUserEntries();
+
+  await createVaultsList(value.pools).then();
+
+  if (isUserConnected === false){
+    hide_user_related_elements();
+  }
+  else {
+    show_user_related_elements()
+  }
 
   try{
     await get_total_value_locked();
@@ -448,27 +448,39 @@ get_count().then(async (value) => {
     console.log(e);
   }
 
-  if (isUserConnected === false){
-    hide_user_related_elements();
-  }
-  else {
-    show_user_related_elements();
-    await updateUserEntries();
-  }
+
+
   $('.vaults__cards-item').each(function(i) {
     $(this).on('click', async function() {
+      $('.modal__action__deposit__coins-item__input').removeClass("incorrect");
+      $('input[type=number]').val("");
       currentPool = value.pools[i];
       let pool = value.pools[i];
       let gamm = `gamm/pool/${pool.pool_id}`;
       let autoCompounderAddress;
       if (isUserConnected) {
         try {
-          // query storage SC to get AC address of this user for clicked vault's pool_id
           try{
             autoCompounderAddress = getAutoCompounderAddress(currentPool.pool_id);
             $('input[name="autoCompounderAddress"]').attr("value", autoCompounderAddress);
+            // getting balances for withdraw funds
+            let WithdrawBalances = await getBalancesForSC(pool.token_1.denom, pool.token_2.denom, autoCompounderAddress);
+            $('.certain_balance')[3].innerHTML = WithdrawBalances[0];
+            $('#WithdrawCoinBalanceOne').attr("value", WithdrawBalances[0]);
+            $('.certain_balance')[4].innerHTML = WithdrawBalances[1];
+            $('#WithdrawCoinBalanceTwo').attr("value", WithdrawBalances[1]);
+
+            $('input[name="withdraw_coin_1"]').attr("max", WithdrawBalances[0]);
+            $('input[name="withdraw_coin_2"]').attr("max", WithdrawBalances[1]);
           } catch(e){
             console.log(e);
+            $('.certain_balance')[3].innerHTML = '-';
+            $('#WithdrawCoinBalanceOne').attr("value", 0);
+            $('.certain_balance')[4].innerHTML = '-';
+            $('#WithdrawCoinBalanceTwo').attr("value", 0);
+
+            $('input[name="withdraw_coin_1"]').attr("max", 0);
+            $('input[name="withdraw_coin_2"]').attr("max", 0);
           }         
           // getting balances for depositing funds
           let DepositBalances = await setBalances(pool.token_1.denom, pool.token_2.denom, gamm);
@@ -482,20 +494,11 @@ get_count().then(async (value) => {
           $('input[name="coin one"]').attr("max", DepositBalances[0]);
           $('input[name="coin two"]').attr("max", DepositBalances[1]);
 
-          // getting balances for withdraw funds
-          let WithdrawBalances = await getBalancesForSC(pool.token_1.denom, pool.token_2.denom, autoCompounderAddress);
-          $('.certain_balance')[3].innerHTML = WithdrawBalances[0];
-          $('#WithdrawCoinBalanceOne').attr("value", WithdrawBalances[0]);
-          $('.certain_balance')[4].innerHTML = WithdrawBalances[1];
-          $('#WithdrawCoinBalanceTwo').attr("value", WithdrawBalances[1]);
 
-          $('input[name="withdraw_coin_1"]').attr("max", WithdrawBalances[0]);
-          $('input[name="withdraw_coin_2"]').attr("max", WithdrawBalances[1]);
         } catch (e) {
           console.log(e);
         }
       }
-      // createJson(); 
       $('.modal__header__title').text(pool.token_1.symbol + " - " + pool.token_2.symbol);
       $('.modal__header__subtitle').text($('.vaults__cards-item__header-subtitle').eq(i).text());
       $('#coinLabelOne').text(pool.token_1.symbol);
@@ -529,6 +532,13 @@ get_count().then(async (value) => {
 
       $('.overlay, .modal').fadeIn('slow');
       $("html").css("overflow", "hidden");
+      if (await hasLocks()){
+        await showLocks();
+        $('.button__action')
+        .addClass('button__action_active').prop('disabled', false);
+      } else {
+        $('.modal__action__unbond').html("");
+      }
       showTokensInput();
 
     });
@@ -605,50 +615,39 @@ get_count().then(async (value) => {
 });
 
 async function get_user_usd_value_for_pool(id, address){
-  const url = `${lcdEndPoint[network]}/osmosis/lockup/v1beta1/account_locked_longer_duration/${account.address}`;
+  const url = `${lcdEndPoint[network]}/osmosis/lockup/v1beta1/account_locked_longer_duration/${address}`;
   let total_usd_value = 0;
 
   const data = await $.get(url);
-
+  console.log(data)
   for (const elem of data['locks']) {
     let coin = elem['coins'][0];
-    const pool_id = coin['denom'].split("/").pop();
+    const pool_id = parseInt(coin['denom'].split("/").pop());
     if (pool_id === id) {
       let usd_value = await calculate_usd_value(pool_id, coin['amount']);
       total_usd_value += usd_value;
-    }
+    } 
   }
   return total_usd_value;
 }
 
-async function getBalancesForVaults(vaults){
-  var requests = [];
-
-  for (const vault of vaults) {
-      requests.push($.get(`${lcdEndPoint[network]}/osmosis/lockup/v1beta1/account_locked_longer_duration/${account.address}`));
-  }
-
-  $.when.apply($, requests).done(function() {
-      console.log(requests);
-      for (const request of requests) {
-        console.log(request.responseJSON);
-      }
-  });
-}
 
 const createVaultsList = async (vaults) => {
   let balances = {};
   for (const vault of vaults){
       let balance = 0;
       if (isUserConnected){
-        balance = await get_user_usd_value_for_pool(vault.pool_id);
+        try {
+          let autoCompounderAddress = getAutoCompounderAddress(vault.pool_id)
+          balance = await get_user_usd_value_for_pool(vault.pool_id, autoCompounderAddress);
+        } catch(e) {
+          console.log(`You don't have a SC for pool ${vault.pool_id}. ${e}`)
+        }
+        userValueLocked += balance;
       }
       balances[vault.pool_id] = balance;
-      console.log(balance);
   }
 
-  // await getBalancesForVaults(vaults);
- 
   vaultsCards.innerHTML = "";
 
   for (const vault of vaults) {
@@ -697,21 +696,28 @@ btnModalAction.forEach((btn) => {
   btn.addEventListener("click", async function (elem){
     switch (this.textContent) {
       case "Deposit":
-        let autoCompounderAddress;
-        try {
-          autoCompounderAddress =  getAutoCompounderAddress(currentPool.pool_id);
+        if (isBothInputFilled(this)) {
+          let autoCompounderAddress;
+          try {
+            autoCompounderAddress =  getAutoCompounderAddress(currentPool.pool_id);
+          }
+          catch (e) {
+            let compounderAddress = await createAutoCompounderSCs();
+            await addEntryForUser(compounderAddress, currentPool.pool_id);
+            autoCompounderAddress =  getAutoCompounderAddress(currentPool.pool_id);
+            $('input[name="autoCompounderAddress"]').attr("value", autoCompounderAddress);
+          }
+          join_pool(offlineSigner, account, this);
+        } else{
+
         }
-        catch (e) {
-          console.log("You don't have any SC for this pool. Please approve this transaction to create a new sc specialized for you"); 
-          let compounderAddress = await createAutoCompounderSCs();
-          await addEntryForUser(compounderAddress, currentPool.pool_id);
-          autoCompounderAddress =  getAutoCompounderAddress(currentPool.pool_id);
-          $('input[name="autoCompounderAddress"]').attr("value", autoCompounderAddress);
-        }
-        deposit_funds(offlineSigner, account, this);
+       
         break;
       case "Withdraw":
         withdraw_funds(offlineSigner, account, this);
+        break;
+      case "Unbond":
+        unbond(offlineSigner, account, this);
         break;
       default:
         console.log(`There is no case for such a button ${this.textContent}`);
@@ -788,6 +794,7 @@ function createMsgSendJson(denom, value) {
   // get exponent of current token by querying https://api-osmosis.imperator.co/search/v1/exponent?symbol=OSMO
   // for now set just mock exponent, for osmo exponent = 6. Might be 6, 8, 18 for other tokens
   let exponent = getExponent(denom);
+  console.log(`Exponent for ${denom} = ${exponent}`)
   return {
     "denom": denom,
     "amount": `${value * (10**exponent)}`
@@ -830,6 +837,32 @@ async function withdraw_funds(offlineSigner, account, element){
   
 }
 
+
+async function unbond(offlineSigner, account, element){
+  let autoCompounderAddress = $('input[name="autoCompounderAddress"]').attr("value");
+  
+  const stargateClient = await SigningCosmWasmClient.connectWithSigner(
+    rpcEndPoint[network],
+    offlineSigner,
+    { gasPrice: "0.004uosmo"}
+  ); 
+
+  let unbondMsg = {
+    unbond_all: {}
+  }
+ 
+  try {
+    showModalLoadingStatus();
+    let transaction = await stargateClient.execute(account.address, autoCompounderAddress, unbondMsg, "auto");
+    console.log(transaction);
+    statusModalShow("success");
+  } catch (e){
+    statusModalShow("error");
+    console.log(e);
+  }
+  
+}
+
 async function estimate_amount_of_lp(funds, poolId){
   const response = await $.get(`https://api-osmosis.imperator.co/pools/v2/${poolId}`);
   let total_shares = await get_total_shares(poolId);
@@ -848,31 +881,67 @@ async function estimate_amount_of_lp(funds, poolId){
   });
 
   amount_of_lp_tokens = (usd_value / liquidity) * total_shares;
-  console.log(amount_of_lp_tokens);
   return amount_of_lp_tokens;
   
 }
 
 async function join_pool(offlineSigner, account, element){
+  let input1 = element.parentNode.querySelector('input[name="coin one"]');
+  let input2 = element.parentNode.querySelector('input[name="coin two"]');
+  let input3 = element.parentNode.querySelector('input[name="coin three"]');
+  let choiceOfType = element.parentNode.querySelector('input[type=radio][name=deposit-coin]:checked').value;
+  let denom1 = input1.getAttribute("address");
+  let denom2 = input2.getAttribute("address");
+  let denom3 = input3.getAttribute("address");
+  let funds = [];
+  let lp_out_amount;
+  if (choiceOfType === "tokens") {
+      funds.push(createMsgSendJson(denom1, input1.value));
+      funds.push(createMsgSendJson(denom2, input2.value));
+      lp_out_amount = await estimate_amount_of_lp(funds, currentPool.pool_id);
+    } else {
+      funds.push(createMsgSendJson(denom3, input3.value));
+  }
   let autoCompounderAddress = $('input[name="autoCompounderAddress"]').attr("value");
+
   // (Amount of funds deposited / Total value of all funds in the pool) * Total number of LP tokens in the pool.
   const stargateClient = await SigningCosmWasmClient.connectWithSigner(
     rpcEndPoint[network],
     offlineSigner,
     { gasPrice: "0.004uosmo"}
   ); 
-  estimate_amount_of_lp([{denom: "iibc/A8CA5EE328FA10C9519DF6057DA1F69682D28F7D0F5CCC7ECB72E3DCA2D157A4", amount: "1000000"}, { denom: "uosmo", amount: "1000000"}], 1);
-  let withdrawMsg = {
-    join_pool: {
-      pool_id: 1,
-      amount: "13213",
-      token_in_maxs: [{denom: "ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2", amount: "1000000"}, {denom: "uosmo", amount: "68290"}]
-    }
+  
+  let joinPoolMsg = {
+      join_pool: {
+        pool_id: currentPool.pool_id,
+        amount: `${lp_out_amount/100}`,
+        token_in_maxs: funds
+      }
     };
+
+  let bondMsg = {
+    add_bond: {
+      owner: autoCompounderAddress,
+      duration: "86400s",
+      coins: [
+        {
+          "denom": `gamm/pool/${currentPool.pool_id}`,
+          "amount": "841883005888993843"
+        }
+      ]
+    }
+  }
  
   try {
     showModalLoadingStatus();
-    let transaction = await stargateClient.executeMultiple(account.address, [{contractAddress: autoCompounderAddress, msg: withdrawMsg, funds: [{ denom: "uosmo", amount: "1000000"}]}, {contractAddress: autoCompounderAddress, msg: withdrawMsg}], "auto");
+    let transaction = await stargateClient.executeMultiple(
+      account.address,
+      [
+        {contractAddress: autoCompounderAddress, msg: joinPoolMsg, funds: funds},
+        {contractAddress: autoCompounderAddress, msg: bondMsg}
+      ], 
+      "auto"
+    );
     console.log(transaction);
     statusModalShow("success");
   } catch (e){
@@ -883,6 +952,11 @@ async function join_pool(offlineSigner, account, element){
 }
 
 
+function isBothInputFilled(element){
+  let input1 = element.parentNode.querySelector('input[name="coin one"]');
+  let input2 = element.parentNode.querySelector('input[name="coin two"]');
+  return input1.value !== 0 && input2.value !== 0
+}
 
 async function deposit_funds(offlineSigner, account, element) {
   let input1 = element.parentNode.querySelector('input[name="coin one"]');
@@ -960,9 +1034,6 @@ async function connectKeplr() {
         // XXX: This line is needed to set the sender address for SigningCosmosClient.
         const accounts = await offlineSigner.getAccounts();
 
-        // const transaction = await sendTx(chainId[network], accounts[0].pubkey, "sync");
-        // console.log(transaction);
-
         account = accounts[0];
         
         console.log(accounts[0]);
@@ -972,15 +1043,6 @@ async function connectKeplr() {
         isUserConnected = true;
         get_count();
         show_user_related_elements();
-
-        // Initialize the gaia api with the offline signer that is injected by Keplr extension.
-        // const cosmJS = new SigningCosmosClient(
-        //     // "https://lcd-osmosis.keplr.app/rest",
-        //     "https://rest.sentry-01.theta-testnet.polypore.xyz",
-        //     accounts[0].address,
-        //     offlineSigner
-        // );
-
   }
     
 }
@@ -1016,87 +1078,6 @@ $('.modal__close').on('click', function() {
 
 
 
-// btnModalAction.addEventListener("click", () => createJson(type_of_msg).then((msg)=>{
-//   console.log(msg);
-// }), false);
-
-
-
-
-async function createJson(type_of_msg) {
-
-  // const depositFirstTokenInput = document.querySelector('input[name="pwd"]');
-  // const depositSecondTokenInput = document.querySelector('input[name="pwd"]');
-  // const depositLPInput = document.querySelector('input[name="pwd"]');
-  // const withdrawTokenInput = document.querySelector('input[name="pwd"]');
-
-  switch(type_of_msg) {
-    // case 'Deposit':
-    //   msg = {
-    //     "sender": btnWallet.textContent,
-    //     "action": "Deposit", // possible values [Deposit, DeposipLP, Withdraw, WithdrawLP]
-    //     "vaultID": 599,
-    //     "pair": [
-    //       {
-    //         "denom": "ampLUNA",
-    //         "amount": 12 // user input
-    //       },
-    //       {
-    //         "denom": "LUNA",
-    //         "amount": 88 // user input
-    //       },
-    //     ],
-    //   };
-    // case 'DepositLP':
-    //   msg = {
-    //     "sender": btnWallet.textContent,
-    //     "action": "DepositLP", // possible values [Deposit, DeposipLP, Withdraw, WithdrawLP]
-    //     "vaultID": 599,
-    //     "amount": 33 // user input
-        
-    //   };
-    //   case 'Withdraw':
-    //     msg = {
-    //       "sender": btnWallet.textContent,
-    //       "action": "Withdraw", // possible values [Deposit, DeposipLP, Withdraw, WithdrawLP]
-    //       "vaultID": 599,
-    //       "amount": 33 // user input
-          
-    //     };
-      case 'WithdrawLP':
-        // let msg = {
-        //   "sender": btnWallet.textContent,
-        //   "action": "WithdrawLP", // possible values [Deposit, DeposipLP, Withdraw, WithdrawLP]
-        //   "vaultID": 599,
-        //   "token": {
-        //     "transaction": modalActionLP.textContent,
-        //     "amount": withdrawLPInput.value // user input
-        //   }
-          
-        // };
-        let msg = '{ "from_address": "' + account.address + 
-          '" ,"to_address": "cosmos15ve85wv6yqrnpa0kdjsfcxcyksuwkjjfcq7tu3",' +
-          '"amount":[' +
-          '{ "denom":"uatom",' +
-            ' "amount": "' + (withdrawLPInput * 1000000).toString() + 
-          '"}' +
-          ']' +
-        '}';
-        // const arbitraryMsg = window.keplr.signArbitrary(chainId[network], account.address, JSON.stringify(msg));
-        // const base64 = "ewogICAgICAidHlwZSI6ICJvc21vc2lzL2dhbW0vc3dhcC1leGFjdC1hbW91bnQtaW4iLAogICAgICAidmFsdWUiOiB7CiAgICAgICAgInJvdXRlcyI6IFsKICAgICAgICAgIHsKICAgICAgICAgICAgInBvb2xfaWQiOiAiMSIsCiAgICAgICAgICAgICJ0b2tlbl9vdXRfZGVub20iOiAiaWJjLzI3Mzk0RkIwOTJEMkVDQ0Q1NjEyM0M3NEYzNkU0QzFGOTI2MDAxQ0VBREE5Q0E5N0VBNjIyQjI1RjQxRTVFQjIiCiAgICAgICAgICB9CiAgICAgICAgXSwKICAgICAgICAic2VuZGVyIjogIm9zbW8xNmxzdmc3dHB0NGNnM2Q5N3ZocnAybGV3dmV0eDhkazk4dHhjeHkiLAogICAgICAgICJ0b2tlbl9pbiI6IHsKICAgICAgICAgICJhbW91bnQiOiAiMTAwMDAwMCIsCiAgICAgICAgICAiZGVub20iOiAidW9zbW8iCiAgICAgICAgfSwKICAgICAgICAidG9rZW5fb3V0X21pbl9hbW91bnQiOiAiMTA2NzQzIgogICAgICB9CiAgICB9";
-        // const base64_v2 = "eyJzZW5kZXIiOiJjb3Ntb3MxMHY0cmFkaGZ5ZHNtNnFnbHJhdzkyYzRseXV2bHVjYXdtcGRnZnUiLCJhY3Rpb24iOiJXaXRoZHJhd0xQIiwidmF1bHRJRCI6NTk5LCJ0b2tlbiI6eyJ0cmFuc2FjdGlvbiI6ImFtcExVTkEgLSBMVU5BIExQIiwiYW1vdW50IjoiMTIzIn19";
-        // const tx = new Uint8Array([msg]);
-        // const transaction =  window.keplr.sendTx(chainId[network], tx, "sync");
-        // return transaction;
-        // console.log(arbitraryMsg);
-        console.log(msg);
-        return JSON.parse(msg);
-    default:
-      break;
-  }
-}
-
-
 // Modal
 
 $('.overlay').on('click', function(e) {
@@ -1112,45 +1093,95 @@ $('.overlay').on('click', function(e) {
 
 
 
-// $('.vaults__cards__items').on('click', '.vaults__cards-item', function(i) {
-//   $(this).on('click', function(i) {
-//     createJson(); 
-//     $('.modal__header__title').text($('.vaults__cards-item__header-title').eq(i).text());
-//     $('.modal__header__subtitle').text($('.vaults__cards-item__header-subtitle').eq(i).text());
-//     $('.modal__action__withdraw-label__header').text($('.vaults__cards-item__header-title').eq(i).text());
-//     $('.modal__descr-item__descr').each(function(j) {
-//       $(this).html($('.vaults__cards-item').eq(i).find('.vaults__cards-item__body-item__descr').eq(j).html());
-//     });
-//     $('.overlay, .modal').fadeIn('slow');
-//     $("html").css("overflow", "hidden");
-//   });
-// });
-
 $('.vaults__settings-views').on('click', ':not(.vaults__settings-views__view_active)', function() {
   $(this)
     .addClass('vaults__settings-views__view_active').siblings().removeClass('vaults__settings-views__view_active');
     // .closest('body').find('div.menu__content').removeClass('menu__content_active').eq($(this).index()).addClass('menu__content_active').siblings().removeClass('menu__content_active');
 });
 
-$('.modal__actions').on('click', ':not(.modal__actions-item_active)', function() {
+$('.modal__actions').on('click', ':not(.modal__actions-item_active)', async function() {
   $(this)
     .addClass('modal__actions-item_active').siblings().removeClass('modal__actions-item_active')
     .closest('.modal__action').find('div.action__content').removeClass('action__content_active').eq($(this).index()).addClass('action__content_active').siblings().removeClass('action__content_active');
     $('.button__action')
       .text($('.modal__actions-item_active').text());
     if (this.textContent === "Deposit") {
-      $('.button__action')
-        .addClass('button__action_active').prop('disabled', false);
+      // $('.button__action')
+      //   .addClass('button__action_active').prop('disabled', false);
       $('.modal__action__withdraw-label__unbond')
         .addClass('modal__action__withdraw-label__unbond-lock')
         .removeClass('modal__action__withdraw-label__unbond-check');
       // $('.modal__action__withdraw-input')
       //   .removeClass('modal__action__withdraw-input_active').find('input').prop('disabled', true);
+    } else if (this.textContent === "Unbond"){
+
+      if (await hasLocks()){
+        await showLocks();
+        $('.button__action')
+        .addClass('button__action_active').prop('disabled', false);
+      } else {
+        $('.modal__action__unbond').html("");
+      }
+
     } else {
+
       $('.button__action')
         .removeClass('button__action_active').prop('disabled', true);
     }
 });
+
+async function hasLocks(){
+  try{
+    let autoCompounderAddress = getAutoCompounderAddress(currentPool.pool_id);
+    const url = `${lcdEndPoint[network]}/osmosis/lockup/v1beta1/account_locked_longer_duration/${autoCompounderAddress}`;
+    const data = await $.get(url);
+    return true ? data : false
+  } catch (e){
+    return false;
+  }
+ 
+}
+
+
+async function showLocks(){
+  function generateLockHTML(lock){
+    let locktime = "";
+
+    if (lock.end_time === "0001-01-01T00:00:00Z") locktime = '<span class="warning">Firstly, unbond lock by clicking button below.</span>'
+    else {
+      const timestamp = lock.end_time;
+
+      // Create a new Date object from the timestamp
+      const date = new Date(timestamp);
+
+      // Use the toLocaleString() method to format the date and time
+      locktime = date.toLocaleString();
+    }
+
+    return `<div class="modal__action__unbond-lock__label">
+                <p>Lock ID: <span>${lock.ID}</span></p>
+                <p>Duration: <span>${lock.duration}</span></p>
+                <p>End-time: ${locktime}</p>
+                <p>Denom: <span>${lock.coins[0].denom}</span></p>
+                <p>Amount: <span>${lock.coins[0].amount}</span></p>
+            </div>`
+  }
+  let autoCompounderAddress = getAutoCompounderAddress(currentPool.pool_id);
+  const url = `${lcdEndPoint[network]}/osmosis/lockup/v1beta1/account_locked_longer_duration/${autoCompounderAddress}`;
+  const data = await $.get(url);
+
+  let locksHTML = "";
+  
+  for (const elem of data['locks']) {
+    locksHTML += generateLockHTML(elem);
+  }
+  console.log(locksHTML)
+    $('.modal__action__unbond').html(
+    ` <div class="modal__action__unbond-lock">
+            ${locksHTML}
+      </div>`)
+  return true ? data : false
+}
 
 $('.modal__action__withdraw-label__unbond').on('click', function() {
   $(this)
