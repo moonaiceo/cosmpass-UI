@@ -948,17 +948,6 @@ async function connectKeplr() {
     else {
         if (isUserConnected) {
             $(".header__button__menu").toggle();
-            // if ($(".header__button__menu").is(":visible")) {
-            //   $(document).on("click", function(e) {
-            //     e.stopPropagation();
-            //     console.log(e.target.id);
-            //     console.log(this);
-            //     console.log($(".header__button__menu").is(":visible"));
-            //     if (e.target.id !== "disconnect" && !e.target.classList.contains("header__button__menu")) {
-            //       $("#disconnect").hide();
-            //     }
-            //   });
-            // }
             $(".header__button__menu").on("click", () => disconnectWallet());
         }
         else {
