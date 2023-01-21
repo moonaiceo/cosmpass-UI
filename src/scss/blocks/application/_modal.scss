@@ -244,6 +244,29 @@
                 }
             }
         }
+        &__unbond {
+            font-size: 12px;
+            margin-top: 24px;
+            &-lock{
+                display: flex;
+                flex-direction: column;
+                &__label{
+                    margin-bottom: 24px;
+                    p{
+                        font-weight: 500;
+                        color: #4A4A4A;
+                        margin-bottom: 5px;
+                    }
+                    span{
+                        color: #8C8B8B;
+                        font-weight: 400;
+                        &.warning{
+                            color: red;
+                        }
+                    }
+                }
+            }
+        }
     }
     &__actions {
         display: flex;
@@ -472,3 +495,5 @@
       transform: rotate(360deg);
     }
   }
+
+  

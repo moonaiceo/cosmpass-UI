@@ -630,6 +630,29 @@
 .modal__action__deposit__coins-item__input_three {
   width: 536px;
 }
+.modal__action__unbond {
+  font-size: 12px;
+  margin-top: 24px;
+}
+.modal__action__unbond-lock {
+  display: flex;
+  flex-direction: column;
+}
+.modal__action__unbond-lock__label {
+  margin-bottom: 24px;
+}
+.modal__action__unbond-lock__label p {
+  font-weight: 500;
+  color: #4A4A4A;
+  margin-bottom: 5px;
+}
+.modal__action__unbond-lock__label span {
+  color: #8C8B8B;
+  font-weight: 400;
+}
+.modal__action__unbond-lock__label span.warning {
+  color: red;
+}
 .modal__actions {
   display: flex;
   margin-top: 24px;
