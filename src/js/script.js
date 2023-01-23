@@ -552,10 +552,8 @@ get_count().then(async (value) => {
       $('.modal__descr-item__descr').eq(0).html(`${pool.tvl} USD`);
       $('.modal__descr-item__descr').eq(1).html(`<span class="span-apy">${pool.apr.two_week}%</span> ${pool.apy.two_week}%`);
 
-
-      $('.modal__descr-item__descr').eq(2).html(`${pool.apy.two_week}%`);
-
       $('.overlay, .modal').fadeIn('slow');
+      
       $("html").css("overflow", "hidden");
       if (await hasLocks()){
         await showLocks();
@@ -785,19 +783,19 @@ $('input[type=number]').on('input', function() {
   }
 });
 
-function setAPY(apy) {
-  $('.modal__descr-item__descr').eq(2).html(`${apy}%`);
+function setAPY(apy, apr) {
+  $('.modal__descr-item__descr').eq(1).html(`<span class="span-apy">${apr}%</span> ${apy}%`);
 }
 
 $('input[type=radio][name=unbond-period]').change(function() {
   if (this.value == '14') {
-      setAPY(currentPool.apy.two_week);
+      setAPY(currentPool.apy.two_week, currentPool.apr.two_week);
   }
   else if (this.value == '7') {
-    setAPY(currentPool.apy.one_week);
+    setAPY(currentPool.apy.one_week, currentPool.apr.one_week);
   }
   else if (this.value == '1') {
-    setAPY(currentPool.apy.one_day);
+    setAPY(currentPool.apy.one_day, currentPool.apr.one_day);
 }
 });
 
@@ -1254,11 +1252,11 @@ function statusModalShow(status) {
   const modalDescr = statusModal.querySelector('.modal__mini__descr');
   if (status === "error") {
     modalIcon.src = '../icons/error_circle.svg';
-    modalDescr.textContent = "Транзакция не выполнена!";
+    modalDescr.textContent = "Transaction failed!";
     modalDescr.style.color = "#C21616";
   } else if (status === "success") {
     modalIcon.src = '../icons/check_circle.svg';
-    modalDescr.textContent = "Отлично! Транзакция успешно выполнена";
+    modalDescr.textContent = "Great! The transaction was successful";
     modalDescr.style.color = "#38C216";
   }
   statusModal.previousElementSibling.style.display = 'none';
