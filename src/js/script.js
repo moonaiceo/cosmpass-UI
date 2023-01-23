@@ -28,6 +28,7 @@ let userEntries;
 let currentPool;
 let user_sc_addresses = {};
 let userValueLocked = 0;
+let currentPoolInfo;
 const contractAddress = {
   "malaga-420":
     "wasm1v8484th79cv2vh49sq949auu20yla3jh7rypzytp50quyly552vs3a4ugd",
@@ -448,6 +449,12 @@ async function updateUserEntries(){
   userEntries = await client_rpc.queryContractSmart(contractAddress[chainId['testnet']], {query_user_entries: {user: account.address}});
 }
 
+async function updatePoolInfo(){
+  const url = `https://api-osmosis.imperator.co/pools/v2/${currentPool.pool_id}`;
+  let response = $.get(url);
+  currentPoolInfo = response;
+}
+
   
 get_count().then(async (value) => {
   pools = value.pools;
@@ -480,6 +487,7 @@ get_count().then(async (value) => {
     $(this).on('click', async function() {
       hideHeaderButtonMenu();
       currentPool = value.pools[i];
+      await updatePoolInfo();
       let pool = value.pools[i];
       let gamm = `gamm/pool/${pool.pool_id}`;
       let autoCompounderAddress;
@@ -518,6 +526,7 @@ get_count().then(async (value) => {
 
           $('input[name="coin one"]').attr("max", DepositBalances[0]);
           $('input[name="coin two"]').attr("max", DepositBalances[1]);
+          $('input[name="coin three"]').attr("max", DepositBalances[2]);
 
 
         } catch (e) {
@@ -552,8 +561,6 @@ get_count().then(async (value) => {
       $('.modal__descr-item__descr').eq(0).html(`${pool.tvl} USD`);
       $('.modal__descr-item__descr').eq(1).html(`<span class="span-apy">${pool.apr.two_week}%</span> ${pool.apy.two_week}%`);
 
-
-      $('.modal__descr-item__descr').eq(2).html(`${pool.apy.two_week}%`);
 
       $('.overlay, .modal').fadeIn('slow');
       $("html").css("overflow", "hidden");
@@ -768,36 +775,58 @@ $('input[type=radio][name=deposit-coin]').change(function() {
   }
 });
 
+function getRatioOfTokens(){
+  return {
+    0: (currentPoolInfo.responseJSON[0]['price'] / currentPoolInfo.responseJSON[1]['price']),
+    1: (currentPoolInfo.responseJSON[1]['price'] / currentPoolInfo.responseJSON[0]['price'])
+  }
+}
+
+$('.modal__action__deposit__coins-item__label.available_balance').on('click', function() {
+      $(`input[name="${$(this).attr("data-input")}"]`).val($(this).val());
+      $(`input[name="${$(this).attr("data-input")}"]`).trigger('input');
+      
+});
+
 $('input[type=number]').on('input', function() {
+
+  if($(this).attr("name") === "coin one") {
+    var coinOneVal = $(this).val();
+    $("input[name='coin two']").val((coinOneVal * getRatioOfTokens()['0']).toFixed(6));
+  } else if ($(this).attr("name") === "coin two") {
+    var coinTwoVal = $(this).val();
+    $("input[name='coin one']").val((coinTwoVal / getRatioOfTokens()['0']).toFixed(6));
+  }
+
   if (this.value > parseFloat($(this).attr("max"))) {
+
     $(this.parentNode).addClass("incorrect");
-    $('.button__action')
-    .removeClass('button__action_active').prop('disabled', true);
+    turnOffModalButton();
   }
   else if (this.value === undefined || this.value <= 0) {
-    $('.button__action')
-    .removeClass('button__action_active').prop('disabled', true);
+    turnOffModalButton();
     $(this.parentNode).removeClass("incorrect");
   } else{
     $(this.parentNode).removeClass("incorrect");
     $('.button__action')
     .addClass('button__action_active').prop('disabled', false);
   }
+
 });
 
-function setAPY(apy) {
-  $('.modal__descr-item__descr').eq(2).html(`${apy}%`);
+function setAPY(apy, apr) {
+  $('.modal__descr-item__descr').eq(1).html(`<span class="span-apy">${apr}%</span> ${apy}%`);
 }
 
 $('input[type=radio][name=unbond-period]').change(function() {
-  if (this.value == '14') {
-      setAPY(currentPool.apy.two_week);
+  if (this.value == '1209600') {
+      setAPY(currentPool.apy.two_week, currentPool.apr.two_week);
   }
-  else if (this.value == '7') {
-    setAPY(currentPool.apy.one_week);
+  else if (this.value == '604800') {
+    setAPY(currentPool.apy.one_week, currentPool.apr.one_week);
   }
-  else if (this.value == '1') {
-    setAPY(currentPool.apy.one_day);
+  else if (this.value == '86400') {
+    setAPY(currentPool.apy.one_day, currentPool.apr.one_day);
 }
 });
 
@@ -905,6 +934,22 @@ async function estimate_amount_of_lp(funds, poolId){
   return amount_of_lp_tokens;
   
 }
+function turnOffModalButton(){
+  $('.button__action')
+        .removeClass('button__action_active').prop('disabled', true);
+}
+
+function areDepositInputsEmpty(){
+  return $('input[name="coin one"]').val() === "" || $('input[name="coin two"]').val() === ""
+}
+
+function setInputsAsIncorrect(inputsName){
+  for (const name of inputsName){
+    console.log(name)
+     $(`input[name="${name}"]`).closest("div").addClass("incorrect");
+  }
+  turnOffModalButton();
+}
 
 async function join_pool(offlineSigner, account, element){
   let input1 = element.parentNode.querySelector('input[name="coin one"]');
@@ -916,59 +961,65 @@ async function join_pool(offlineSigner, account, element){
   let denom3 = input3.getAttribute("address");
   let funds = [];
   let lp_out_amount;
-  if (choiceOfType === "tokens") {
+  let bond_period = $('input[name="unbond-period"]').val();
+  if (areDepositInputsEmpty()) {
+    setInputsAsIncorrect(["coin one", "coin two"]);
+  } else {
+    if (choiceOfType === "tokens") {
       funds.push(createMsgSendJson(denom1, input1.value));
       funds.push(createMsgSendJson(denom2, input2.value));
       lp_out_amount = await estimate_amount_of_lp(funds, currentPool.pool_id);
     } else {
       funds.push(createMsgSendJson(denom3, input3.value));
-  }
-  let autoCompounderAddress = $('input[name="autoCompounderAddress"]').attr("value");
-
-  // (Amount of funds deposited / Total value of all funds in the pool) * Total number of LP tokens in the pool.
-  const stargateClient = await SigningCosmWasmClient.connectWithSigner(
-    rpcEndPoint[network],
-    offlineSigner,
-    { gasPrice: "0.004uosmo"}
-  ); 
-  
-  let joinPoolMsg = {
-      join_pool: {
-        pool_id: currentPool.pool_id,
-        amount: `${lp_out_amount/100}`,
-        token_in_maxs: funds
-      }
-    };
-
-  let bondMsg = {
-    add_bond: {
-      owner: autoCompounderAddress,
-      duration: "86400s",
-      coins: [
-        {
-          "denom": `gamm/pool/${currentPool.pool_id}`,
-          "amount": "841883005888993843"
-        }
-      ]
     }
-  }
- 
-  try {
-    showModalLoadingStatus();
-    let transaction = await stargateClient.executeMultiple(
-      account.address,
-      [
-        {contractAddress: autoCompounderAddress, msg: joinPoolMsg, funds: funds},
-        {contractAddress: autoCompounderAddress, msg: bondMsg}
-      ], 
-      "auto"
-    );
-    console.log(transaction);
-    statusModalShow("success");
-  } catch (e){
-    statusModalShow("error");
-    console.log(e);
-  }
+    let autoCompounderAddress = $('input[name="autoCompounderAddress"]').attr("value");
+
+    // (Amount of funds deposited / Total value of all funds in the pool) * Total number of LP tokens in the pool.
+    const stargateClient = await SigningCosmWasmClient.connectWithSigner(
+      rpcEndPoint[network],
+      offlineSigner,
+      { gasPrice: "0.004uosmo"}
+    ); 
+    
+    let joinPoolMsg = {
+        join_pool: {
+          pool_id: currentPool.pool_id,
+          amount: `${lp_out_amount/100}`,
+          token_in_maxs: funds
+        }
+      };
+
+    let bondMsg = {
+      add_bond: {
+        owner: autoCompounderAddress,
+        duration: `${bond_period}s`,
+        coins: [
+          {
+            "denom": `gamm/pool/${currentPool.pool_id}`,
+            "amount": "841883005888993843"
+          }
+        ]
+      }
+    }
+  
+    try {
+      showModalLoadingStatus();
+      let transaction = await stargateClient.executeMultiple(
+        account.address,
+        [
+          {contractAddress: autoCompounderAddress, msg: joinPoolMsg, funds: funds},
+          {contractAddress: autoCompounderAddress, msg: bondMsg}
+        ], 
+        "auto"
+      );
+      console.log(transaction);
+      statusModalShow("success");
+    } catch (e){
+      statusModalShow("error");
+      console.log(e);
+    }
+    }
+  
   
 }
 
@@ -1172,6 +1223,7 @@ $('.modal__actions').on('click', ':not(.modal__actions-item_active)', async func
     $('.button__action')
       .text($('.modal__actions-item_active').text());
     if (this.textContent === "Deposit") {
+      turnOffModalButton();
       // $('.button__action')
       //   .addClass('button__action_active').prop('disabled', false);
       $('.modal__action__withdraw-label__unbond')
@@ -1191,8 +1243,7 @@ $('.modal__actions').on('click', ':not(.modal__actions-item_active)', async func
 
     } else {
 
-      $('.button__action')
-        .removeClass('button__action_active').prop('disabled', true);
+    turnOffModalButton();
     }
 });
 
@@ -1229,7 +1280,7 @@ async function showLocks(){
                 <p>Duration: <span>${lock.duration}</span></p>
                 <p>End-time: ${locktime}</p>
                 <p>Denom: <span>${lock.coins[0].denom}</span></p>
-                <p>Amount: <span>${lock.coins[0].amount}</span></p>
+                <p>Amount: <span>${lock.coins[0].amount / 10 ** 18}</span></p>
             </div>`
   }
   let autoCompounderAddress = getAutoCompounderAddress(currentPool.pool_id);
