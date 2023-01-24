@@ -1,0 +1,30 @@
+.warning {
+    background: #eee;
+    box-shadow: 4px 4px 8px 0px rgba(0,0,0,0.31);
+    border-radius:1em;
+    overflow:hidden;
+    display:flex;
+    justify-content: center;
+    max-width:40em;
+    margin:14px auto;
+    border: 2px solid #FF6F00;
+    text-align: center;
+    &__text {
+        margin:.75em;
+        font-size:1.25em;
+        position:relative;
+        display:block;
+        width:calc(100% - 2.5em - 1.5em);
+        color: #222;
+        &-span {
+            font-size:1.35em;
+            color: #FF6F00;
+        }
+        p{
+            color: #222;
+            margin-top: 5px;
+            font-weight: 400;
+        }
+        
+    }
+}
