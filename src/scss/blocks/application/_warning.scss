@@ -1,0 +1,29 @@
+.warning {
+    background: #eee;
+    box-shadow: 4px 4px 8px 0px rgba(0,0,0,0.31);
+    border-radius:1em;
+    overflow:hidden;
+    display:flex;
+    max-width:40em;
+    margin:14px auto;
+    &__text {
+        margin:.75em;
+        font-size:1.25em;
+        position:relative;
+        display:block;
+        width:calc(100% - 2.5em - 1.5em);
+        color: #222;
+        &-span {
+            color: #FF6F00;
+        }
+        &:after {
+            content:'';
+            border-bottom:.1em solid #FF6F00;
+            width:100%;
+            height:100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+    }
+}
