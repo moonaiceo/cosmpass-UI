@@ -331,6 +331,7 @@ function clearInputsValues(){
 
   $('input[name="coin one"]').attr("max", 0);
   $('input[name="coin two"]').attr("max", 0);
+  $('input[name="coin three"]').attr("max", 0);
 
 }
 
@@ -355,9 +356,16 @@ async function show_user_related_elements(){
 function getBalance(response, denom){
   let balance = 0;
   let exponent = getExponent(denom);
-  if (response['balances'].find((b) => b.denom === denom) != undefined) {
-      balance = response['balances'].find((b) => b.denom === denom)['amount'] / (10**exponent);
-  } 
+  if (!denom.includes("gamm")){
+    if (response['balances'].find((b) => b.denom === denom) != undefined) {
+      balance = (response['balances'].find((b) => b.denom === denom)['amount'] / (10 ** exponent));
+    } 
+  } else {
+    if (response['balances'].find((b) => b.denom === denom) != undefined) {
+      balance = (response['balances'].find((b) => b.denom === denom)['amount'] );
+    } 
+  }
+
   return balance;
 }
 
@@ -369,7 +377,6 @@ async function setBalances(denom1, denom2, denom3){
   const balance1 = getBalance(response, denom1);
   const balance2 = getBalance(response, denom2);
   const balance3 = getBalance(response, denom3);
-
   return [balance1, balance2, balance3];
 }
 
@@ -481,11 +488,18 @@ get_count().then(async (value) => {
     console.log(e);
   }
 
+function reset_input_incorrect_class(){
+  $('.modal__action__deposit__coins-item__input').removeClass("incorrect");
 
+}
 
   $('.vaults__cards-item').each(function(i) {
     $(this).on('click', async function() {
+      $('input[type=number]').each(function() {
+        $(this).val('');
+    });
       hideHeaderButtonMenu();
+      reset_input_incorrect_class();
       currentPool = value.pools[i];
       await updatePoolInfo();
       let pool = value.pools[i];
@@ -541,7 +555,7 @@ get_count().then(async (value) => {
       $('#WithdrawCoinLabelOne').text(pool.token_1.symbol);
       $('#WithdrawCoinLabelTwo').text(pool.token_2.symbol);
       $('#depositTokens').text(pool.token_1.symbol + " + " + pool.token_2.symbol);
-      $('#depositLP').text(pool.pool_id + " LP token");
+      $('#depositLP').text("Pool " + pool.pool_id + " LP token");
       $('input[name="coin one"]').attr("address", pool.token_1.denom);
       $('input[name="coin two"]').attr("address", pool.token_2.denom);
       $('input[name="coin three"]').attr("address", gamm);
@@ -569,8 +583,6 @@ get_count().then(async (value) => {
       $("html").css("overflow", "hidden");
       if (await hasLocks()){
         await showLocks();
-        $('.button__action')
-        .addClass('button__action_active').prop('disabled', false);
       } else {
         $('.modal__action__unbond').html("");
       }
@@ -730,7 +742,7 @@ btnModalAction.forEach((btn) => {
         if (isBothInputFilled(this)) {
           let autoCompounderAddress;
           try {
-            autoCompounderAddress =  getAutoCompounderAddress(currentPool.pool_id);
+            autoCompounderAddress = getAutoCompounderAddress(currentPool.pool_id);
           }
           catch (e) {
             let compounderAddress = await createAutoCompounderSCs();
@@ -739,8 +751,8 @@ btnModalAction.forEach((btn) => {
             $('input[name="autoCompounderAddress"]').attr("value", autoCompounderAddress);
           }
           join_pool(offlineSigner, account, this);
-        } else{
-
+        } else {
+          console.log("First of all, fill both inputs.")
         }
        
         break;
@@ -786,62 +798,78 @@ function getRatioOfTokens(){
 }
 
 $('.modal__action__deposit__coins-item__label.available_balance').on('click', function() {
-      $(`input[name="${$(this).attr("data-input")}"]`).val($(this).val());
-      $(`input[name="${$(this).attr("data-input")}"]`).trigger('input');
+      let input = $(`input[name="${$(this).attr("data-input")}"]`);
+      input.val($(this).val());
+      $(input.parent()).removeClass("incorrect");
+      let name = input.attr("name");
+      if (name === "coin one"){
+        $(`input[name="coin one"]`).trigger('input');
+      } else if (name === "coin two") {
+        $(`input[name="coin two"]`).trigger('input');
+      } else if (name === "coin three") {
+        $(`input[name="coin three"]`).trigger('input');
+      } else if (name === "withdraw_coin_1") {
+        $(`input[name="withdraw_coin_1"]`).trigger('input');
+      } else if (name === "withdraw_coin_2") {
+        $(`input[name="withdraw_coin_2"]`).trigger('input');
+      } 
       
 });
 
+function validateInput(elem){
+  if (elem.value > parseFloat($(elem).attr("max"))) {
+    $(elem.parentNode).addClass("incorrect");
+    turnOffModalButton();
+  }
+  else if (elem.value === undefined || elem.value <= 0) {
+    turnOffModalButton();
+    $(elem.parentNode).removeClass("incorrect");
+  } else{
+    $(elem.parentNode).removeClass("incorrect");
+    $('.button__action')
+    .addClass('button__action_active').prop('disabled', false);
+  }
+}
 $('input[type=number]').on('input', function() {
-
-  if($(this).attr("name") === "coin one") {
+  let input_name = $(this).attr("name");
+  if(input_name === "coin one") {
     var coinOneVal = $(this).val();
     $("input[name='coin two']").val((coinOneVal * getRatioOfTokens()['0']).toFixed(6));
-  } else if ($(this).attr("name") === "coin two") {
+  } else if (input_name === "coin two") {
     var coinTwoVal = $(this).val();
     $("input[name='coin one']").val((coinTwoVal / getRatioOfTokens()['0']).toFixed(6));
   }
 
-  if (this.value > parseFloat($(this).attr("max"))) {
+  validateInput(this);
+  if (["coin one", "coin two"].includes(input_name)){
+    validateInput(document.querySelector(`input[name="coin one"]`))
+    validateInput(document.querySelector(`input[name="coin two"]`))
+  }
 
-    $(this.parentNode).addClass("incorrect");
-    turnOffModalButton();
-  }
-  else if (this.value === undefined || this.value <= 0) {
-    turnOffModalButton();
-    $(this.parentNode).removeClass("incorrect");
-  } else{
-    $(this.parentNode).removeClass("incorrect");
-    $('.button__action')
-    .addClass('button__action_active').prop('disabled', false);
-  }
+
 
 });
 
-function setAPY(apy, apr) {
+function setAPY(apr, apy) {
   $('.modal__descr-item__descr').eq(1).html(`<span class="span-apy">${apr}%</span> ${apy}%`);
 }
 
 $('input[type=radio][name=unbond-period]').change(function() {
-  if (this.value == '14') {
-      setAPY(currentPool.apy.two_week);
+  if (this.value == '1209600') {
+      setAPY(currentPool.apr.two_week, currentPool.apy.two_week);
   }
-  else if (this.value == '7') {
-    setAPY(currentPool.apy.one_week);
+  else if (this.value == '604800') {
+    setAPY(currentPool.apr.one_week, currentPool.apy.one_week);
   }
-  else if (this.value == '1') {
-    setAPY(currentPool.apy.one_day);
+  else if (this.value == '86400') {
+    setAPY(currentPool.apr.one_day, currentPool.apy.one_day);
 }
 });
 
 function getExponent(denom){
   let exponents = tokens;
-  let exponent;
-  if (denom.includes("gamm")){
-    exponent = 18;
-  } else {
-    exponent = exponents.find((b) => b.denom === denom)['exponent'];
-  }
-  return exponent;
+  if (denom.includes("gamm")) return 0
+  return exponents.find((b) => b.denom === denom)['exponent'];
 }
 function createMsgSendJson(denom, value) {
   // get exponent of current token by querying https://api-osmosis.imperator.co/search/v1/exponent?symbol=OSMO
@@ -946,6 +974,10 @@ function areDepositInputsEmpty(){
   return $('input[name="coin one"]').val() === "" || $('input[name="coin two"]').val() === ""
 }
 
+function areLpDepositInputEmpty(){
+  return $('input[name="coin three"]').val() === "" 
+}
+
 function setInputsAsIncorrect(inputsName){
   for (const name of inputsName){
     console.log(name)
@@ -955,6 +987,14 @@ function setInputsAsIncorrect(inputsName){
 }
 
 async function join_pool(offlineSigner, account, element){
+  let autoCompounderAddress = $('input[name="autoCompounderAddress"]').attr("value");
+  // (Amount of funds deposited / Total value of all funds in the pool) * Total number of LP tokens in the pool.
+  const stargateClient = await SigningCosmWasmClient.connectWithSigner(
+    rpcEndPoint[network],
+    offlineSigner,
+    { gasPrice: "0.004uosmo"}
+  ); 
+
   let input1 = element.parentNode.querySelector('input[name="coin one"]');
   let input2 = element.parentNode.querySelector('input[name="coin two"]');
   let input3 = element.parentNode.querySelector('input[name="coin three"]');
@@ -963,67 +1003,74 @@ async function join_pool(offlineSigner, account, element){
   let denom2 = input2.getAttribute("address");
   let denom3 = input3.getAttribute("address");
   let funds = [];
+  let msgs = [];
   let lp_out_amount;
   let bond_period = $('input[name="unbond-period"]').val();
-  if (areDepositInputsEmpty()) {
-    setInputsAsIncorrect(["coin one", "coin two"]);
-  } else {
-    if (choiceOfType === "tokens") {
+  if (choiceOfType === "tokens") {
+
+    if (areDepositInputsEmpty()) {
+      setInputsAsIncorrect(["coin one", "coin two"]);
+    } else {
       funds.push(createMsgSendJson(denom1, input1.value));
       funds.push(createMsgSendJson(denom2, input2.value));
       lp_out_amount = await estimate_amount_of_lp(funds, currentPool.pool_id);
-    } else {
-      funds.push(createMsgSendJson(denom3, input3.value));
-    }
-    let autoCompounderAddress = $('input[name="autoCompounderAddress"]').attr("value");
-
-    // (Amount of funds deposited / Total value of all funds in the pool) * Total number of LP tokens in the pool.
-    const stargateClient = await SigningCosmWasmClient.connectWithSigner(
-      rpcEndPoint[network],
-      offlineSigner,
-      { gasPrice: "0.004uosmo"}
-    ); 
-    
-    let joinPoolMsg = {
-        join_pool: {
-          pool_id: currentPool.pool_id,
-          amount: `${lp_out_amount/100}`,
-          token_in_maxs: funds
-        }
-      };
-
-    let bondMsg = {
-      add_bond: {
-        owner: autoCompounderAddress,
-        duration: `${bond_period}s`,
-        coins: [
-          {
-            "denom": `gamm/pool/${currentPool.pool_id}`,
-            "amount": "841883005888993843"
+      
+      let joinPoolMsg = {
+          join_pool: {
+            pool_id: currentPool.pool_id,
+            amount: `${lp_out_amount}`,
+            token_in_maxs: funds
           }
-        ]
+        };
+  
+      let bondMsg = {
+        add_bond: {
+          owner: autoCompounderAddress,
+          duration: `${bond_period}s`,
+          coins: [
+            {
+              "denom": `gamm/pool/${currentPool.pool_id}`,
+              "amount": lp_out_amount
+            }
+          ]
+        }
       }
-    }
-  
-    try {
-      showModalLoadingStatus();
-      let transaction = await stargateClient.executeMultiple(
-        account.address,
-        [
-          {contractAddress: autoCompounderAddress, msg: joinPoolMsg, funds: funds},
-          {contractAddress: autoCompounderAddress, msg: bondMsg}
-        ], 
-        "auto"
+      msgs.push(
+        {contractAddress: autoCompounderAddress, msg: joinPoolMsg, funds: funds},
+        {contractAddress: autoCompounderAddress, msg: bondMsg}
       );
-      console.log(transaction);
-      statusModalShow("success");
-    } catch (e){
-      statusModalShow("error");
-      console.log(e);
+  }
+} else {
+    if (areLpDepositInputEmpty()) setInputsAsIncorrect(["coin three"])
+    else{
+      let coin = {
+        "denom": `gamm/pool/${currentPool.pool_id}`,
+        "amount": input3.value
+      }
+      let bondMsg = {
+        add_bond: {
+          owner: autoCompounderAddress,
+          duration: `${bond_period}s`,
+          coins: [coin]
+        }
+      }
+      funds.push(coin);
+      msgs.push({contractAddress: autoCompounderAddress, msg: bondMsg, funds: funds});
     }
-    }
-  
-  
+  }
+  try {
+    showModalLoadingStatus();
+    let transaction = await stargateClient.executeMultiple(
+      account.address,
+      msgs,
+      "auto"
+    );
+    console.log(transaction);
+    statusModalShow("success");
+  } catch (e){
+    statusModalShow("error");
+    console.log(e);
+  }
 }
 
 
@@ -1224,13 +1271,13 @@ $('.modal__actions').on('click', ':not(.modal__actions-item_active)', async func
       // $('.modal__action__withdraw-input')
       //   .removeClass('modal__action__withdraw-input_active').find('input').prop('disabled', true);
     } else if (this.textContent === "Unbond"){
-
+      $('.button__action')
+      .addClass('button__action_active').prop('disabled', false);
       if (await hasLocks()){
         await showLocks();
-        $('.button__action')
-        .addClass('button__action_active').prop('disabled', false);
       } else {
         $('.modal__action__unbond').html("");
+        turnOffModalButton()
       }
 
     } else {
@@ -1256,7 +1303,7 @@ async function showLocks(){
   function generateLockHTML(lock){
     let locktime = "";
 
-    if (lock.end_time === "0001-01-01T00:00:00Z") locktime = '<span class="warning">Firstly, unbond lock by clicking button below.</span>'
+    if (lock.end_time === "0001-01-01T00:00:00Z") locktime = '<span class="warning">Click the button below to unbond the lock.</span>'
     else {
       const timestamp = lock.end_time;
 
