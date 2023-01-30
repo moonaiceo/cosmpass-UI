@@ -24,6 +24,33 @@
         display: flex;
         flex-direction: column;
         margin-top: 24px;
+        &-warning{
+            display: none;
+            background-color: #fcd1d1;
+            border: 1px solid #fdb6b6;
+            padding: 0.5em 0.25em;
+            border-radius: 5px;
+            color: #333333;
+            text-align: center;
+            font-size: 12px;
+            h5{
+                text-align: center;
+                font-size: 1.2em;
+                color: #333333;
+                margin-bottom: 5px;
+            }
+            p{
+                margin-top: 5px;
+                color: #333333;
+                span{
+                    color: #3B89E4;
+                    cursor: pointer;
+                    &:hover{
+                        text-decoration: underline;
+                    }
+                }
+            }
+        }
         &-item {
             display: flex;
             justify-content: space-between;
@@ -264,6 +291,7 @@
                         &.warning{
                             color: red;
                         }
+                     
                     }
                 }
             }

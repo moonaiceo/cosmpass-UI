@@ -399,16 +399,17 @@ async function createAutoCompounderSCs(){
     offlineSigner,
     { gasPrice: "0.004uosmo"}
   );
+  console.log(currentPool)
   const initMsg = {
-    name: `${account.address} pool 1`,
+    name: `AutoCompounder`,
     symbol: "CPASS",
     decimals: 6,
-    id: 1,
-    denom_1: "ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2",
-    denom_2: "uosmo",
+    id: currentPool.pool_id,
+    denom_1: currentPool.token_1.denom,
+    denom_2: currentPool.token_2.denom,
     white_list_denoms: [
-      "ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2",
-      "uosmo",
+      currentPool.token_1.denom,
+      currentPool.token_2.denom,
     ],
     fee: 0,
     fee_collector_address: "osmo18ynwv4smhp7jdeqslpnh8c327ekwa9sralkhyp",
@@ -488,6 +489,14 @@ get_count().then(async (value) => {
     console.log(e);
   }
 
+function showScWarning(){
+  $('#warning_sc_exist').show();
+}
+
+function hideScWarning(){
+  $('#warning_sc_exist').hide();
+}
+
 function reset_input_incorrect_class(){
   $('.modal__action__deposit__coins-item__input').removeClass("incorrect");
 
@@ -519,7 +528,9 @@ function reset_input_incorrect_class(){
 
             $('input[name="withdraw_coin_1"]').attr("max", WithdrawBalances[0]);
             $('input[name="withdraw_coin_2"]').attr("max", WithdrawBalances[1]);
+            hideScWarning();
           } catch(e){
+            showScWarning();
             console.log(e);
             $('.certain_balance')[3].innerHTML = '-';
             $('#WithdrawCoinBalanceOne').attr("value", 0);
@@ -734,37 +745,46 @@ const createVaultsList = async (vaults) => {
   }
 };
 
+$('#instantiate_sc').on('click', async function (){
+  await instantiateAutoCompounderSc();
+})
+
+async function instantiateAutoCompounderSc(){
+  try {
+    showModalLoadingStatus();
+    let compounderAddress = await createAutoCompounderSCs();
+    await addEntryForUser(compounderAddress, currentPool.pool_id);
+    compounderAddress = getAutoCompounderAddress(currentPool.pool_id);
+    $('input[name="autoCompounderAddress"]').attr("value", compounderAddress);
+    statusModalShow("success");
+    return compounderAddress;
+  } catch (e){
+    statusModalShow("error");
+    console.log(e);
+  }
+}
 
 btnModalAction.forEach((btn) => {
   btn.addEventListener("click", async function (elem){
-    switch (this.textContent) {
-      case "Deposit":
-        if (isBothInputFilled(this)) {
+    if (this.textContent.includes("Deposit")) {
+      if (isBothInputFilled(this)) {
           let autoCompounderAddress;
           try {
-            autoCompounderAddress = getAutoCompounderAddress(currentPool.pool_id);
+              autoCompounderAddress = getAutoCompounderAddress(currentPool.pool_id);
+          } catch (e) {
+              await instantiateAutoCompounderSc();
           }
-          catch (e) {
-            let compounderAddress = await createAutoCompounderSCs();
-            await addEntryForUser(compounderAddress, currentPool.pool_id);
-            autoCompounderAddress =  getAutoCompounderAddress(currentPool.pool_id);
-            $('input[name="autoCompounderAddress"]').attr("value", autoCompounderAddress);
-          }
-          join_pool(offlineSigner, account, this);
-        } else {
+          await join_pool(offlineSigner, account, this);
+      } else {
           console.log("First of all, fill both inputs.")
-        }
-       
-        break;
-      case "Withdraw":
-        withdraw_funds(offlineSigner, account, this);
-        break;
-      case "Unbond":
-        unbond(offlineSigner, account, this);
-        break;
-      default:
+      }
+    } else if (this.textContent === "Withdraw") {
+      await withdraw_funds(offlineSigner, account, this);
+    } else if (this.textContent === "Unbond") {
+      await unbond(offlineSigner, account, this);
+    } else {
         console.log(`There is no case for such a button ${this.textContent}`);
-    }
+    }  
   });
 });
 
@@ -830,6 +850,14 @@ function validateInput(elem){
     .addClass('button__action_active').prop('disabled', false);
   }
 }
+
+function setDollarValueOfDeposit(){
+  let value = (currentPoolInfo.responseJSON[0]['price'] * $("input[name='coin one']").val()) + (currentPoolInfo.responseJSON[1]['price'] * $("input[name='coin two']").val())
+  console.log(currentPoolInfo.responseJSON[0]['price'], currentPoolInfo.responseJSON[1]['price'])
+  console.log(`Deposit ≈ ${numberWithSpaces(value.toFixed(2)) } USD`)
+  $('.button__action').text(`Deposit ≈ ${numberWithSpaces(value.toFixed(2)) } USD`)
+}
+
 $('input[type=number]').on('input', function() {
   let input_name = $(this).attr("name");
   if(input_name === "coin one") {
@@ -840,14 +868,15 @@ $('input[type=number]').on('input', function() {
     $("input[name='coin one']").val((coinTwoVal / getRatioOfTokens()['0']).toFixed(6));
   }
 
+  if (input_name === "coin one" || input_name === "coin two"){ 
+    setDollarValueOfDeposit();
+  } 
   validateInput(this);
+  
   if (["coin one", "coin two"].includes(input_name)){
     validateInput(document.querySelector(`input[name="coin one"]`))
     validateInput(document.querySelector(`input[name="coin two"]`))
   }
-
-
-
 });
 
 function setAPY(apr, apy) {
@@ -1200,6 +1229,7 @@ function disconnectWallet() {
 }
 
 function hideHeaderButtonMenu() {
+  $('.button__action').text("Deposit");
   $(".header__button__menu").hide();
 }
 

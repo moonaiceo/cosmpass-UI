@@ -451,6 +451,33 @@
   flex-direction: column;
   margin-top: 24px;
 }
+.modal__descr-warning {
+  display: none;
+  background-color: #fcd1d1;
+  border: 1px solid #fdb6b6;
+  padding: 0.5em 0.25em;
+  border-radius: 5px;
+  color: #333333;
+  text-align: center;
+  font-size: 12px;
+}
+.modal__descr-warning h5 {
+  text-align: center;
+  font-size: 1.2em;
+  color: #333333;
+  margin-bottom: 5px;
+}
+.modal__descr-warning p {
+  margin-top: 5px;
+  color: #333333;
+}
+.modal__descr-warning p span {
+  color: #3B89E4;
+  cursor: pointer;
+}
+.modal__descr-warning p span:hover {
+  text-decoration: underline;
+}
 .modal__descr-item {
   display: flex;
   justify-content: space-between;
