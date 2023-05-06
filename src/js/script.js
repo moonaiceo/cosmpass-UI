@@ -12,7 +12,7 @@ const chainId = {
 };
 const rpcEndPoint = {
   "mainnet": "https://rpc.osmosis.zone/",
-  "testnet": "https://rpc-test.osmosis.zone/",
+  "testnet": "https://rpc.testnet.osmosis.zone/",
 };
 const lcdEndPoint = {
   "mainnet": "https://lcd.osmosis.zone/",
@@ -41,8 +41,8 @@ const contractAddress = {
 
 
 const get_count = async () => {
-    const client_rpc = await CosmWasmClient.connect(rpcEndPoint[network]);
-    const getCount = await client_rpc.queryContractSmart(contractAddress[chainId['testnet']], {"query_all_pools": {}});
+    // const client_rpc = await CosmWasmClient.connect(rpcEndPoint[network]);
+    // const getCount = await client_rpc.queryContractSmart(contractAddress[chainId['testnet']], {"query_all_pools": {}});
     const mock_data = {
         "pools": [
           {
@@ -271,7 +271,7 @@ const get_count = async () => {
           }
         ]
     };
-    return getCount;
+    return mock_data;
 };
 
 function numberWithSpaces(x) {
