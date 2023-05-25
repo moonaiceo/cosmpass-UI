@@ -26,17 +26,11 @@ gulp.task("build-js", () => {
                     module: {
                         rules: [
                           {
-                            test: /\.m?js$/,
+                            test: /\.js$|jsx/,
                             exclude: /(node_modules|bower_components)/,
                             use: {
                               loader: 'babel-loader',
-                              options: {
-                                presets: [['@babel/preset-env', {
-                                    debug: true,
-                                    corejs: 3,
-                                    useBuiltIns: "usage"
-                                }]]
-                              }
+                              
                             }
                           }
                         ]
@@ -95,17 +89,11 @@ gulp.task("prod", () => {
             module: {
                 rules: [
                   {
-                    test: /\.m?js$/,
+                    test: /\.js$|jsx/,
                     exclude: /(node_modules|bower_components)/,
                     use: {
                       loader: 'babel-loader',
-                      options: {
-                        presets: [['@babel/preset-env', {
-                            debug: false,
-                            corejs: 3,
-                            useBuiltIns: "usage"
-                        }]]
-                      }
+                     
                     }
                   }
                 ]

@@ -196,6 +196,48 @@ const tokens = [
       "display": "atom"
     },
     {
+      "price": 10.0831967217,
+      "denom": "ibc/A8C2D23A1E6F95DA4E48BA349667E322BD7A6C996D8A4AAE8BA72E190F3D1477",
+      "symbol": "ATOM",
+      "main": true,
+      "liquidity": 33617291.61110359,
+      "volume_24h": 1249680.4680937845,
+      "volume_24h_change": -64.4708697958,
+      "name": "Cosmos",
+      "price_24h_change": -0.6142997827,
+      "price_7d_change": 7.1546391723,
+      "exponent": 6,
+      "display": "atom"
+    },
+    {
+      "price": 10.0831967217,
+      "denom": "ibc/B3504E092456BA618CC28AC671A71FB08C6CA0FD0BE7C8A5B5A3E2DD933CC9E4",
+      "symbol": "ATOM",
+      "main": true,
+      "liquidity": 33617291.61110359,
+      "volume_24h": 1249680.4680937845,
+      "volume_24h_change": -64.4708697958,
+      "name": "Cosmos",
+      "price_24h_change": -0.6142997827,
+      "price_7d_change": 7.1546391723,
+      "exponent": 6,
+      "display": "atom"
+    },
+    {
+      "price": 10.0831967217,
+      "denom": "ibc/8E2FEFCBD754FA3C97411F0126B9EC76191BAA1B3959CB73CECF396A4037BBF0",
+      "symbol": "ATOM",
+      "main": true,
+      "liquidity": 33617291.61110359,
+      "volume_24h": 1249680.4680937845,
+      "volume_24h_change": -64.4708697958,
+      "name": "Cosmos",
+      "price_24h_change": -0.6142997827,
+      "price_7d_change": 7.1546391723,
+      "exponent": 6,
+      "display": "atom"
+    },
+    {
       "price": 30.9961345621,
       "denom": "ibc/297C64CC42B5A8D8F82FE2EBE208A6FE8F94B86037FA28C4529A23701C228F7A",
       "symbol": "NETA",
@@ -1454,7 +1496,35 @@ const tokens = [
       "price_7d_change": 5.0234425147,
       "exponent": 6,
       "display": "osmo"
-    }
+    },
+    {
+      "price": 0.71953725,
+      "denom": "ibc/6F34E1BD664C36CE49ACC28E60D62559A5F96C4F9A6CCE4FC5A67B2852E24CFE",
+      "symbol": "USDC",
+      "main": true,
+      "liquidity": 67020611.4332142,
+      "volume_24h": 3394531.769434834,
+      "volume_24h_change": -56.353807266,
+      "name": "Osmosis",
+      "price_24h_change": 0.0524250347,
+      "price_7d_change": 5.0234425147,
+      "exponent": 6,
+      "display": "osmo"
+    },
+        {
+      "price": 0.71953725,
+      "denom": "ibc/2E7368A14AC9AB7870F32CFEA687551C5064FA861868EDF7437BC877358A81F9",
+      "symbol": "MARS",
+      "main": true,
+      "liquidity": 67020611.4332142,
+      "volume_24h": 3394531.769434834,
+      "volume_24h_change": -56.353807266,
+      "name": "Osmosis",
+      "price_24h_change": 0.0524250347,
+      "price_7d_change": 5.0234425147,
+      "exponent": 6,
+      "display": "osmo"
+    },
   ]
 
 export { tokens };

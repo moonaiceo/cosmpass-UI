@@ -1,24 +1,30 @@
 import { CosmWasmClient, SigningCosmWasmClient  } from "@cosmjs/cosmwasm-stargate";
 import { DirectSecp256k1HdWallet } from "@cosmjs/proto-signing";
 import { tokens } from './constants.js';
+
+
 const btnWallet = document.querySelector(".button__wallet");
 const btnModalAction = document.querySelectorAll(".button__action");
 const modalActionLP = document.querySelector('.modal__action__lp');
 const vaultsCards = document.querySelector('.vaults__cards__items');
-const network = "testnet";
+const network = "new_testnet";
 const chainId = {
   "mainnet": "osmosis-1",
   "testnet": "osmo-test-4",
+  "new_testnet": "osmo-test-5"
 };
 const rpcEndPoint = {
   "mainnet": "https://rpc.osmosis.zone/",
   "testnet": "https://rpc.testnet.osmosis.zone/",
+  "new_testnet": "https://rpc.osmotest5.osmosis.zone/"
 };
 const lcdEndPoint = {
   "mainnet": "https://lcd.osmosis.zone/",
   "testnet": "https://lcd-test.osmosis.zone/",
+  "new_testnet": "https://lcd.osmotest5.osmosis.zone/"
 };
-const CODE_ID = 5172;
+// const CODE_ID = 5172; osmo-test-5
+const CODE_ID = 219;
 let isUserConnected = false;
 let offlineSigner;
 let account;
@@ -27,6 +33,7 @@ let pools;
 let userEntries;
 let currentPool;
 let user_sc_addresses = {};
+let prices = [];
 let userValueLocked = 0;
 let currentPoolInfo;
 const contractAddress = {
@@ -34,15 +41,50 @@ const contractAddress = {
     "wasm1v8484th79cv2vh49sq949auu20yla3jh7rypzytp50quyly552vs3a4ugd",
   "osmo-test-4":
     "osmo163e0tvu9rpcc7ns6jn0m3y62z4505rvgzjf5kkx66am45syf4djstqk6xh",
+  "osmo-test-5":
+    "osmo1cv3aqtgj8emag4m2acyeeht2nykpaar9v3jjnp7e8vnsq4tlcuaqh9k3as",
   "uni-3": "juno1yfp9zyx9zhqe77d05yqjx3ctqjhzha0xn5d9x8zxcpp658ks2hvqlfjt72",
   "constantine-1":
     "archway1wnuakyjhvlnepk2g9ncvvaks0zy0axgx70pet4jh2nv8lmsuff9qseuvpc"
 };
 
 
+const poolLiquidityInfo = {
+  12: {
+    base_denom: "ibc/A8C2D23A1E6F95DA4E48BA349667E322BD7A6C996D8A4AAE8BA72E190F3D1477",
+    quote_denom: "uosmo",
+    liquidity: 1765409,
+    base_denom_price: 12.27551,
+    quote_denom_price: 0.738941,
+  }, 
+  5: {
+    base_denom: "ibc/6F34E1BD664C36CE49ACC28E60D62559A5F96C4F9A6CCE4FC5A67B2852E24CFE",
+    quote_denom: "uosmo",
+    liquidity: 458944,
+    base_denom_price: 1,
+    quote_denom_price: 0.738941,
+  },
+  3: {
+    base_denom: "ibc/8E2FEFCBD754FA3C97411F0126B9EC76191BAA1B3959CB73CECF396A4037BBF0",
+    quote_denom: "uosmo",
+    liquidity: 197857,
+    base_denom_price: 0.713679,
+    quote_denom_price: 0.738941,
+  },
+  10: {
+    base_denom: "ibc/2E7368A14AC9AB7870F32CFEA687551C5064FA861868EDF7437BC877358A81F9",
+    quote_denom: "uosmo",
+    liquidity: 117930,
+    base_denom_price: 0.131764,
+    quote_denom_price: 0.738941,
+  }
+}
+
+
 const get_count = async () => {
-    // const client_rpc = await CosmWasmClient.connect(rpcEndPoint[network]);
-    // const getCount = await client_rpc.queryContractSmart(contractAddress[chainId['testnet']], {"query_all_pools": {}});
+    const client_rpc = await CosmWasmClient.connect(rpcEndPoint[network]);
+    const getCount = await client_rpc.queryContractSmart(contractAddress[chainId['new_testnet']], {"query_all_pools": {}});
+    console.log(getCount)
     const mock_data = {
         "pools": [
           {
@@ -271,7 +313,7 @@ const get_count = async () => {
           }
         ]
     };
-    return mock_data;
+    return getCount;
 };
 
 function numberWithSpaces(x) {
@@ -280,9 +322,13 @@ function numberWithSpaces(x) {
   return parts.join(".");
 }
 
+// async function get_liquidity(pool_id){
+//   const response = await $.get(`https://api-osmosis.imperator.co/pools/v2/${pool_id}`);
+//   return response[0]['liquidity'];
+// }
+
 async function get_liquidity(pool_id){
-  const response = await $.get(`https://api-osmosis.imperator.co/pools/v2/${pool_id}`);
-  return response[0]['liquidity'];
+  return poolLiquidityInfo[parseInt(pool_id)].liquidity
 }
 
 async function get_total_shares(pool_id){
@@ -298,10 +344,18 @@ async function calculate_usd_value(pool_id, user_shares_amount){
 
 async function get_total_value_locked(){
   const client_rpc = await CosmWasmClient.connect(rpcEndPoint[network]);
-  const allEntries = await client_rpc.queryContractSmart(contractAddress[chainId['testnet']], {"query_all_entries": {}});
+  const allEntries = await client_rpc.queryContractSmart(contractAddress[chainId['new_testnet']], {"query_all_entries": {}});
   let usd_value = 0;
-  for (const entry in allEntries){
-
+  
+  for (const entry of allEntries.entries){
+      let pools = entry[1];
+      
+      for (const pool of pools){
+        try{
+          usd_value += await get_user_usd_value_for_pool(pool.pool_id, pool.pool_addr)
+        } catch (e) {
+        }
+      }
   }
   $('#total_value_locked .promo__value__number').text(numberWithSpaces(usd_value.toFixed(2)) + " USD");
 
@@ -374,6 +428,7 @@ async function setBalances(denom1, denom2, denom3){
   const account_address = account.address;
 
   const response = await $.get(`${lcdEndPoint[network]}cosmos/bank/v1beta1/balances/${account_address}`);
+  console.log(response);
   const balance1 = getBalance(response, denom1);
   const balance2 = getBalance(response, denom2);
   const balance3 = getBalance(response, denom3);
@@ -388,7 +443,7 @@ async function getBalancesForSC(denom1, denom2, address){
 }
 
 function getAutoCompounderAddress(pool_id){
-  let autoCompounderAddress = userEntries['entries'].find((e) => e.pool_id === pool_id)['pool_addr'];
+  let autoCompounderAddress = userEntries['entries'].find((e) => e.pool_id === parseInt(pool_id))['pool_addr'];
   console.log(autoCompounderAddress);
   return autoCompounderAddress;
 }
@@ -401,10 +456,10 @@ async function createAutoCompounderSCs(){
   );
   console.log(currentPool)
   const initMsg = {
-    name: `AutoCompounder`,
+    name: "AutoCompounder",
     symbol: "CPASS",
     decimals: 6,
-    id: currentPool.pool_id,
+    id: parseInt(currentPool.pool_id),
     denom_1: currentPool.token_1.denom,
     denom_2: currentPool.token_2.denom,
     white_list_denoms: [
@@ -412,13 +467,13 @@ async function createAutoCompounderSCs(){
       currentPool.token_2.denom,
     ],
     fee: 0,
-    fee_collector_address: "osmo18ynwv4smhp7jdeqslpnh8c327ekwa9sralkhyp",
-    initial_balances: [ ],
+    fee_collector_address: "osmo1cyyzpxplxdzkeea7kwsydadg87357qnahakaks",
+    initial_balances: [ { address: "osmo18ynwv4smhp7jdeqslpnh8c327ekwa9sralkhyp", amount: "10000000" } ],
     mint: {
       minter: "osmo18ynwv4smhp7jdeqslpnh8c327ekwa9sralkhyp"
     }
   };
-  
+  console.log(initMsg);
   const tx = await stargateClient.instantiate(account.address, CODE_ID, initMsg, "CPASS", "auto");
   const scAddr = tx.contractAddress;
   return scAddr;
@@ -426,7 +481,7 @@ async function createAutoCompounderSCs(){
 
 
 async function addEntryForUser(autoCompounderAddress, poolId ){
-  const mnemonic = "chef letter plastic corn sunny pony also step much shine film need patient jaguar bless snap bike unfold rabbit bamboo wine field easily uncle";
+  const mnemonic = "normal check fix crumble luxury aim price apology inner upset senior later";
   const wallet = await DirectSecp256k1HdWallet.fromMnemonic(mnemonic, { prefix: "osmo" });
   const walletAccounts = await wallet.getAccounts();
   const walletAddress = walletAccounts[0].address;
@@ -439,7 +494,7 @@ async function addEntryForUser(autoCompounderAddress, poolId ){
   let msg = {
     new_entry: {
       user: account.address,
-      pool_id: poolId,
+      pool_id: parseInt(poolId),
       lp_token_amount: "0",
       token_1_amount: "0",
       token_2_amount: "0",
@@ -447,20 +502,34 @@ async function addEntryForUser(autoCompounderAddress, poolId ){
     }
   };
 
-  let tx = await client.execute(walletAddress, contractAddress[chainId['testnet']], msg, "auto");
+  let tx = await client.execute(walletAddress, contractAddress[chainId['new_testnet']], msg, "auto");
   await updateUserEntries();
   console.log(tx);
 }
 
 async function updateUserEntries(){
-  const client_rpc = await CosmWasmClient.connect(rpcEndPoint[network]);
-  userEntries = await client_rpc.queryContractSmart(contractAddress[chainId['testnet']], {query_user_entries: {user: account.address}});
+  try{
+    const client_rpc = await CosmWasmClient.connect(rpcEndPoint[network]);
+    userEntries = await client_rpc.queryContractSmart(contractAddress[chainId['new_testnet']], {query_user_entries: {user: account.address}});
+  } catch (e){
+    console.log(e)
+  }
+ 
 }
 
 async function updatePoolInfo(){
   const url = `https://api-osmosis.imperator.co/pools/v2/${currentPool.pool_id}`;
   let response = $.get(url);
   currentPoolInfo = response;
+}
+
+async function getPricesOfPool(){
+  prices = [];
+  const url = `${lcdEndPoint[network]}/osmosis/gamm/v1beta1/pools/${currentPool.pool_id}/prices?base_asset_denom=${currentPool.token_1.denom}&quote_asset_denom=${currentPool.token_2.denom}`;
+  let r = await $.get(url);
+  console.log(poolLiquidityInfo)
+  prices.push(poolLiquidityInfo[parseInt(currentPool.pool_id)].base_denom_price)
+  prices.push(poolLiquidityInfo[parseInt(currentPool.pool_id)].quote_denom_price)
 }
 
   
@@ -511,6 +580,7 @@ function reset_input_incorrect_class(){
       reset_input_incorrect_class();
       currentPool = value.pools[i];
       await updatePoolInfo();
+      await getPricesOfPool()
       let pool = value.pools[i];
       let gamm = `gamm/pool/${pool.pool_id}`;
       let autoCompounderAddress;
@@ -812,8 +882,8 @@ $('input[type=radio][name=deposit-coin]').change(function() {
 
 function getRatioOfTokens(){
   return {
-    0: (currentPoolInfo.responseJSON[0]['price'] / currentPoolInfo.responseJSON[1]['price']),
-    1: (currentPoolInfo.responseJSON[1]['price'] / currentPoolInfo.responseJSON[0]['price'])
+    0: (prices[0] / prices[1] ),
+    1: (prices[1] / prices[0])
   }
 }
 
@@ -852,8 +922,7 @@ function validateInput(elem){
 }
 
 function setDollarValueOfDeposit(){
-  let value = (currentPoolInfo.responseJSON[0]['price'] * $("input[name='coin one']").val()) + (currentPoolInfo.responseJSON[1]['price'] * $("input[name='coin two']").val())
-  console.log(currentPoolInfo.responseJSON[0]['price'], currentPoolInfo.responseJSON[1]['price'])
+  let value = (prices[0] * $("input[name='coin one']").val()) + (prices[1] * $("input[name='coin two']").val())
   console.log(`Deposit ≈ ${numberWithSpaces(value.toFixed(2)) } USD`)
   $('.button__action').text(`Deposit ≈ ${numberWithSpaces(value.toFixed(2)) } USD`)
 }
@@ -871,11 +940,13 @@ $('input[type=number]').on('input', function() {
   if (input_name === "coin one" || input_name === "coin two"){ 
     setDollarValueOfDeposit();
   } 
-  validateInput(this);
+  
   
   if (["coin one", "coin two"].includes(input_name)){
     validateInput(document.querySelector(`input[name="coin one"]`))
     validateInput(document.querySelector(`input[name="coin two"]`))
+  } {
+    validateInput(this);
   }
 });
 
@@ -905,9 +976,10 @@ function createMsgSendJson(denom, value) {
   // for now set just mock exponent, for osmo exponent = 6. Might be 6, 8, 18 for other tokens
   let exponent = getExponent(denom);
   console.log(`Exponent for ${denom} = ${exponent}`)
+  const amount = parseInt(value * (10**exponent));
   return {
     "denom": denom,
-    "amount": `${value * (10**exponent)}`
+    "amount": `${amount}`
   };
 }
 
@@ -973,25 +1045,29 @@ async function unbond(offlineSigner, account, element){
   
 }
 
+
 async function estimate_amount_of_lp(funds, poolId){
-  const response = await $.get(`https://api-osmosis.imperator.co/pools/v2/${poolId}`);
+  const response = poolLiquidityInfo[poolId]
   let total_shares = await get_total_shares(poolId);
-  const pair1 = response[0];
-  const pair2 = response[1];
-  const liquidity = pair1['liquidity'];
+  console.log(total_shares, "total shares")
+  const liquidity = response.liquidity;
   let usd_value = 0;
   let amount_of_lp_tokens;
   funds.forEach(({denom, amount}) => {
     let exponent = getExponent(denom);
-    if (denom === pair1['denom']){
-      usd_value += (amount / 10 ** exponent) * pair1['price'];
-    } else if (denom === pair2['denom']){
-      usd_value += (amount / 10 ** exponent) * pair2['price'];
+    if (denom === response.base_denom){
+      usd_value += (amount / 10 ** exponent) * response.base_denom_price;
+    } else if (denom === response.quote_denom){
+      usd_value += (amount / 10 ** exponent) * response.quote_denom_price;
     }
+    console.log("usd_value", usd_value)
   });
 
   amount_of_lp_tokens = (usd_value / liquidity) * total_shares;
-  return amount_of_lp_tokens;
+
+  amount_of_lp_tokens = Math.ceil(amount_of_lp_tokens)
+  console.log(amount_of_lp_tokens / 500038567320042)
+  return amount_of_lp_tokens.toString()
   
 }
 function turnOffModalButton(){
@@ -1024,6 +1100,8 @@ async function join_pool(offlineSigner, account, element){
     { gasPrice: "0.004uosmo"}
   ); 
 
+  console.log(autoCompounderAddress, " address")
+
   let input1 = element.parentNode.querySelector('input[name="coin one"]');
   let input2 = element.parentNode.querySelector('input[name="coin two"]');
   let input3 = element.parentNode.querySelector('input[name="coin three"]');
@@ -1043,14 +1121,16 @@ async function join_pool(offlineSigner, account, element){
       funds.push(createMsgSendJson(denom1, input1.value));
       funds.push(createMsgSendJson(denom2, input2.value));
       lp_out_amount = await estimate_amount_of_lp(funds, currentPool.pool_id);
-      
+      console.log(lp_out_amount)
       let joinPoolMsg = {
           join_pool: {
-            pool_id: currentPool.pool_id,
+            pool_id: parseInt(currentPool.pool_id),
             amount: `${lp_out_amount}`,
             token_in_maxs: funds
           }
         };
+
+        console.log(joinPoolMsg)
   
       let bondMsg = {
         add_bond: {
@@ -1064,6 +1144,8 @@ async function join_pool(offlineSigner, account, element){
           ]
         }
       }
+      console.log(bondMsg)
+
       msgs.push(
         {contractAddress: autoCompounderAddress, msg: joinPoolMsg, funds: funds},
         {contractAddress: autoCompounderAddress, msg: bondMsg}
@@ -1206,7 +1288,7 @@ async function connectKeplr() {
           // Initialize the gaia api with the offline signer that is injected by Keplr extension.
           // const cosmJS = new SigningCosmosClient(
           //     // "https://lcd-osmosis.keplr.app/rest",
-          //     "https://rest.sentry-01.theta-testnet.polypore.xyz",
+          //     "https://rest.sentry-01.theta-new_testnet.polypore.xyz",
           //     accounts[0].address,
           //     offlineSigner
           // );
@@ -1347,9 +1429,9 @@ async function showLocks(){
     return `<div class="modal__action__unbond-lock__label">
                 <p>Lock ID: <span>${lock.ID}</span></p>
                 <p>Duration: <span>${lock.duration}</span></p>
-                <p>End-time: ${locktime}</p>
                 <p>Denom: <span>${lock.coins[0].denom}</span></p>
-                <p>Amount: <span>${lock.coins[0].amount / 10 ** 18}</span></p>
+                <p>Amount: <span>${lock.coins[0].amount / (10 ** 18)}</span></p>
+                <p>End-time: ${locktime}</p>
             </div>`
   }
   let autoCompounderAddress = getAutoCompounderAddress(currentPool.pool_id);
